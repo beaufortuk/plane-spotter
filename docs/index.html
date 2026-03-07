@@ -1380,9 +1380,7 @@ if (!window.isSecureContext) {
             err => {
                 const codes = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' };
                 console.error(`[GEO] Attempt ${geoAttempt} failed in ${Date.now() - t0}ms — code=${err.code} (${codes[err.code] || 'UNKNOWN'}), message="${err.message}"`);
-                if (err.code === 1) {
-                    showManualForm('Location access denied.');
-                } else if (err.code === 3 && geoAttempt < 2) {
+                if (err.code === 3 && geoAttempt < 2) {
                     document.getElementById('load-msg').innerHTML = 'Still locating<span class="blink">_</span>';
                     tryGeo();
                 } else {
