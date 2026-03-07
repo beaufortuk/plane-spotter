@@ -1,0 +1,8 @@
+.DS_Store
+.claude/
+*.json
+!docs/**/*.json
+worker/.wrangler/
+macos-widget/PlaneTracker.xcodeproj/xcuserdata/
+macos-widget/PlaneTracker.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
