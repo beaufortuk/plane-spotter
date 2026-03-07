@@ -72,13 +72,16 @@
         #loc-form .lf-sub   { font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.6; }
         #loc-form .lf-row   { display: flex; align-items: center; gap: 8px; width: 100%; }
         #loc-form label     { font-size: 11px; color: var(--text-secondary); width: 28px; flex-shrink: 0; }
-        #loc-form input[type=text] {
+        #loc-form input[type=text],
+        #loc-form input[type=password] {
             flex: 1; background: #0e0e1a; border: 1px solid #2a2a40;
             color: var(--text-primary); font-family: 'Courier New', Courier, monospace;
             font-size: 14px; padding: 6px 10px; border-radius: 3px;
             outline: none; -webkit-appearance: none;
         }
-        #loc-form input[type=text]:focus { border-color: var(--text-accent); }
+        #loc-form input[type=text]:focus,
+        #loc-form input[type=password]:focus { border-color: var(--text-accent); }
+        #loc-form .lf-sep { border-top: 1px solid var(--border-strong); margin: 12px 0 8px; }
         #loc-form .lf-err { font-size: 11px; color: var(--status-err); min-height: 14px; }
         #loc-form button {
             background: var(--text-accent); color: #000;
@@ -541,6 +544,16 @@
             <label>LON</label>
             <input type="text" id="in-lon" placeholder="e.g. -0.1278" inputmode="decimal">
         </div>
+        <div class="lf-sep"></div>
+        <div class="lf-sub">OpenSky account (optional, for higher rate limits):</div>
+        <div class="lf-row">
+            <label>USER</label>
+            <input type="text" id="in-osky-user" placeholder="username or email" autocomplete="username">
+        </div>
+        <div class="lf-row">
+            <label>PASS</label>
+            <input type="password" id="in-osky-pass" placeholder="password" autocomplete="current-password">
+        </div>
         <div class="lf-err" id="loc-err"></div>
         <button id="loc-go">GO &#9992;</button>
     </div>
@@ -802,13 +815,16 @@ function animateVal(el, targetStr, duration = 700) {
     requestAnimationFrame(step);
 }
 
-// ─── OpenSky auth (optional, from URL params) ───────────────────────────────
-const oskyParams = new URLSearchParams(window.location.search);
-const OSKY_USER  = oskyParams.get('osky_user');
-const OSKY_PASS  = oskyParams.get('osky_pass');
-const OSKY_HEADERS = OSKY_USER && OSKY_PASS
-    ? { 'Authorization': 'Basic ' + btoa(`${OSKY_USER}:${OSKY_PASS}`) }
-    : {};
+// ─── OpenSky auth (optional, from localStorage) ─────────────────────────────
+let OSKY_HEADERS = {};
+function loadOskyAuth() {
+    const u = localStorage.getItem('osky_user');
+    const p = localStorage.getItem('osky_pass');
+    OSKY_HEADERS = u && p
+        ? { 'Authorization': 'Basic ' + btoa(`${u}:${p}`) }
+        : {};
+}
+loadOskyAuth();
 
 // ─── Fetch flights (OpenSky) ──────────────────────────────────────────────────
 async function fetchFlights() {
@@ -1323,6 +1339,11 @@ function showManualForm(reason) {
     document.getElementById('load-msg').textContent = reason;
     document.getElementById('load-hint').classList.add('hidden');
     document.getElementById('loc-form').classList.remove('hidden');
+    // Pre-fill saved OpenSky credentials
+    const su = localStorage.getItem('osky_user');
+    const sp = localStorage.getItem('osky_pass');
+    if (su) document.getElementById('in-osky-user').value = su;
+    if (sp) document.getElementById('in-osky-pass').value = sp;
 }
 
 document.getElementById('unit-toggle').addEventListener('click', () => {
@@ -1338,6 +1359,17 @@ document.getElementById('loc-go').addEventListener('click', () => {
     if (isNaN(lon) || lon < -180 || lon > 180)  { err.textContent = 'Longitude must be −180 to 180'; return; }
     err.textContent = '';
     userLat = lat; userLon = lon;
+    // Save OpenSky credentials if provided
+    const oskyU = document.getElementById('in-osky-user').value.trim();
+    const oskyP = document.getElementById('in-osky-pass').value;
+    if (oskyU && oskyP) {
+        localStorage.setItem('osky_user', oskyU);
+        localStorage.setItem('osky_pass', oskyP);
+    } else {
+        localStorage.removeItem('osky_user');
+        localStorage.removeItem('osky_pass');
+    }
+    loadOskyAuth();
     startApp();
 });
 
