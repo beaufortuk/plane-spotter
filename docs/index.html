@@ -676,7 +676,7 @@
 
 <script>
 // ─── Configuration ────────────────────────────────────────────────────────────
-let   UNITS              = 'imperial';
+let   UNITS              = localStorage.getItem('pt-units') || 'imperial';
 const FLIGHT_REFRESH_MS  = 60_000;
 const FLIGHT_IDLE_MS     = 30_000;  // poll faster when no flights overhead
 const FLIGHT_BACKOFF_MS  = 120_000; // back off on rate-limit (429)
@@ -1329,8 +1329,10 @@ function showManualForm(reason) {
 
 document.getElementById('unit-toggle').addEventListener('click', () => {
     UNITS = UNITS === 'imperial' ? 'metric' : 'imperial';
+    localStorage.setItem('pt-units', UNITS);
     renderWeather(lastWeather);
 });
+document.getElementById('unit-toggle').textContent = UNITS === 'imperial' ? '°F' : '°C';
 
 document.getElementById('loc-go').addEventListener('click', () => {
     const lat = parseFloat(document.getElementById('in-lat').value.trim());
