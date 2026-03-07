@@ -1091,9 +1091,9 @@ function flapAnimate(element, targetText, lg = false) {
     const chars = [...targetText];
     const len = chars.length;
     const settled = new Array(len).fill(false);
-    const TICK = 40;           // ms between random character swaps
-    const STAGGER = 80;        // ms delay between each position settling
-    const START_DELAY = 120;   // ms before first char settles
+    const TICK = 180;          // ms between flips — real Solari boards ~200ms (5 flaps/sec)
+    const STAGGER = 200;       // ms delay between each position settling (left to right)
+    const START_DELAY = 300;   // ms before first char settles
 
     // Build initial random flap spans
     const spans = chars.map((ch, i) => {
