@@ -1389,12 +1389,12 @@ if (!window.isSecureContext) {
                     // GPS failed — try IP-based geolocation as fallback
                     console.log('[GEO] GPS failed, trying IP geolocation fallback');
                     document.getElementById('load-msg').innerHTML = 'Locating by IP<span class="blink">_</span>';
-                    fetch('https://ipapi.co/json/')
+                    fetch('https://get.geojs.io/v1/ip/geo.json')
                         .then(r => r.json())
                         .then(d => {
                             if (d.latitude && d.longitude) {
                                 console.log(`[GEO] IP fallback success — lat=${d.latitude}, lon=${d.longitude}, city=${d.city}`);
-                                userLat = d.latitude; userLon = d.longitude; startApp();
+                                userLat = parseFloat(d.latitude); userLon = parseFloat(d.longitude); startApp();
                             } else {
                                 console.error('[GEO] IP fallback returned no coords:', d);
                                 showManualForm('Could not determine location — enter manually.');
