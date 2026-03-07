@@ -7,45 +7,44 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Plane Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg:       #06060e;
-            --origin:   #00e5a0;
-            --dest:     #ff4060;
-            --amber:    #ffaa33;
-            --sky:      #44ccff;
-            --lilac:    #cc88ff;
-            --white:    #f0f0f8;
-            --grey:     #666;
-            --dim:      #252535;
-            --border:   #111122;
-            --orange:   #ff8c00;
-            --purple:   #b080ff;
-            --blue:     #4488ff;
-            --pink:     #ff90b0;
-            --green:    #40c060;
-            --red:      #ff4040;
-            --dark-orange: #ff7030;
-            --mid-blue: #6080ff;
+            --bg:            #0c0c10;
+            --flap-bg:       #1a1a1e;
+            --flap-split:    rgba(0,0,0,0.5);
+            --text-primary:  #e8e0d0;
+            --text-secondary:#6a6a70;
+            --text-accent:   #d4a847;
+            --border:        #1a1a20;
+            --border-strong: #252530;
+            --dim:           #3a3a44;
+            --status-ok:     #5a9a60;
+            --status-err:    #c05050;
+            --vs-up:         #7ab87a;
+            --vs-down:       #b87a7a;
+            /* Spacing tokens */
+            --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+            --sp-4: 16px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
         }
 
         html, body {
             width: 100%; height: 100%;
             background: var(--bg);
-            color: var(--white);
+            color: var(--text-primary);
             font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
         }
 
-        /* Subtle scanline texture — gives it that "panel display" quality */
+        /* Scanline texture */
         body::after {
             content: '';
             position: fixed; inset: 0;
             background: repeating-linear-gradient(
                 0deg, transparent, transparent 2px,
-                rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 3px
+                rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 3px
             );
             pointer-events: none;
             z-index: 9999;
@@ -57,9 +56,9 @@
             align-items: center; justify-content: center;
             height: 100vh; gap: 14px; padding: 24px;
         }
-        #loading .logo { font-size: 20px; color: var(--blue); letter-spacing: 4px; }
-        #loading .msg  { font-size: 13px; color: var(--grey); }
-        #loading .hint { font-size: 11px; color: var(--dim); max-width: 300px; text-align: center; line-height: 1.6; }
+        #loading .logo { font-size: 20px; color: var(--text-accent); letter-spacing: 4px; }
+        #loading .msg  { font-size: 13px; color: var(--text-secondary); }
+        #loading .hint { font-size: 11px; color: var(--text-secondary); max-width: 300px; text-align: center; line-height: 1.6; }
         @keyframes blink { 50% { opacity: 0; } }
         .blink { animation: blink 1s step-end infinite; }
 
@@ -69,20 +68,20 @@
             align-items: center; gap: 10px;
             width: 100%; max-width: 300px;
         }
-        #loc-form .lf-title { font-size: 13px; color: var(--orange); letter-spacing: 1px; text-align: center; }
-        #loc-form .lf-sub   { font-size: 10px; color: var(--dim); text-align: center; line-height: 1.6; }
+        #loc-form .lf-title { font-size: 13px; color: var(--text-accent); letter-spacing: 1px; text-align: center; }
+        #loc-form .lf-sub   { font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.6; }
         #loc-form .lf-row   { display: flex; align-items: center; gap: 8px; width: 100%; }
-        #loc-form label     { font-size: 11px; color: var(--grey); width: 28px; flex-shrink: 0; }
+        #loc-form label     { font-size: 11px; color: var(--text-secondary); width: 28px; flex-shrink: 0; }
         #loc-form input[type=text] {
             flex: 1; background: #0e0e1a; border: 1px solid #2a2a40;
-            color: var(--white); font-family: 'Courier New', Courier, monospace;
+            color: var(--text-primary); font-family: 'Courier New', Courier, monospace;
             font-size: 14px; padding: 6px 10px; border-radius: 3px;
             outline: none; -webkit-appearance: none;
         }
-        #loc-form input[type=text]:focus { border-color: var(--blue); }
-        #loc-form .lf-err { font-size: 11px; color: var(--red); min-height: 14px; }
+        #loc-form input[type=text]:focus { border-color: var(--text-accent); }
+        #loc-form .lf-err { font-size: 11px; color: var(--status-err); min-height: 14px; }
         #loc-form button {
-            background: var(--blue); color: #000;
+            background: var(--text-accent); color: #000;
             font-family: 'Courier New', Courier, monospace;
             font-size: 13px; font-weight: bold; letter-spacing: 2px;
             border: none; padding: 10px 28px; border-radius: 3px;
@@ -95,17 +94,17 @@
         /* ── Header ─────────────────────────────────────────────── */
         #header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 4px 16px;
-            border-bottom: 1px solid var(--border);
+            padding: var(--sp-2) var(--sp-4);
+            border-bottom: 1px solid var(--border-strong);
             flex-shrink: 0;
         }
-        #hd-logo  { font-size: 10px; color: var(--dim); letter-spacing: 4px; }
+        #hd-logo  { font-size: 11px; color: var(--text-secondary); letter-spacing: 5px; font-weight: normal; }
         #hd-right { display: flex; align-items: baseline; gap: 8px; }
-        #hd-time  { font-size: 17px; color: var(--blue); font-weight: bold; letter-spacing: 1px; }
-        #hd-date  { font-size: 10px; color: var(--grey); }
+        #hd-time  { font-size: 17px; color: var(--text-accent); font-weight: bold; letter-spacing: 1px; }
+        #hd-date  { font-size: 11px; color: var(--text-secondary); }
 
         /* ── Main ────────────────────────────────────────────────── */
-        #main { flex: 1; display: flex; overflow: hidden; }
+        #main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
         /* ── Clock mode ──────────────────────────────────────────── */
         #clock-mode { display: flex; width: 100%; }
@@ -114,52 +113,72 @@
             justify-content: center; align-items: center;
             padding: 8px 20px; border-right: 1px solid var(--border); gap: 8px;
         }
-        #big-time     { font-size: clamp(32px, 10vw, 58px); color: var(--blue); font-weight: bold; letter-spacing: 2px; }
-        #weather-line { font-size: 13px; color: var(--grey); }
-        #temp-val     { color: var(--white); }
-        #no-flights   { font-size: 9px; color: var(--dim); letter-spacing: 3px; margin-top: 6px; }
+        #big-time     { font-size: clamp(32px, 10vw, 58px); color: var(--text-accent); font-weight: bold; letter-spacing: 2px; }
+        #weather-line { font-size: 13px; color: var(--text-secondary); }
+        #temp-val     { color: var(--text-primary); }
+        #unit-toggle {
+            background: none; border: 1px solid var(--dim);
+            color: var(--text-secondary); font-family: 'Courier New', Courier, monospace;
+            font-size: 11px; letter-spacing: 2px; padding: 3px 10px;
+            border-radius: 3px; cursor: pointer;
+        }
+        #unit-toggle:hover { border-color: var(--text-accent); color: var(--text-accent); }
+        #no-flights   { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; margin-top: 6px; }
         #clock-right  {
             width: 52%; display: flex; flex-direction: column;
             justify-content: center; padding: 8px 14px; gap: 6px;
         }
-        #forecast-label { font-size: 8px; color: var(--dim); letter-spacing: 3px; }
+        #forecast-label { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; }
         #forecast-grid  { display: flex; gap: 6px; justify-content: space-around; }
         .fc-day  { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
-        .fc-name { font-size: 10px; color: var(--pink); letter-spacing: 1px; }
+        .fc-name { font-size: 11px; color: var(--text-accent); letter-spacing: 1px; }
         .fc-icon { font-size: 18px; }
         .fc-temps { font-size: 11px; }
-        .fc-max  { color: var(--dark-orange); }
-        .fc-min  { color: var(--mid-blue); }
+        .fc-max  { color: var(--text-primary); }
+        .fc-min  { color: var(--text-secondary); }
 
         /* ── Flight mode ─────────────────────────────────────────── */
         #flight-mode {
-            display: flex; flex-direction: column;
-            width: 100%; overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow: hidden;
+            transition: opacity 0.22s ease, transform 0.22s ease;
         }
 
         /* ── Airline band ────────────────────────────────────────── */
         #fl-airline {
-            display: flex; align-items: center; gap: 12px;
-            padding: 8px 14px;
+            display: flex; align-items: center; gap: 14px;
+            padding: 10px 16px;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            position: relative;
+        }
+        /* Left accent strip */
+        #fl-airline::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: var(--text-accent);
+            opacity: 0.9;
         }
         #airline-logo {
-            width: 44px; height: 44px;
+            width: 52px; height: 52px;
             object-fit: contain; flex-shrink: 0;
-            border-radius: 6px;
-            background: rgba(255,255,255,0.04);
+            border-radius: 3px;
+            background: rgba(255,255,255,0.10);
+            padding: 4px;
+            border: 1px solid rgba(255,255,255,0.15);
         }
         #airline-logo.no-logo { display: none; }
 
         #fl-airline-text { flex: 1; overflow: hidden; min-width: 0; }
 
-        /* Scrolling airline name */
         #airline-name-wrap { overflow: hidden; white-space: nowrap; }
         #airline-name {
             display: inline-block;
-            font-size: 21px; font-weight: bold;
-            color: var(--white); letter-spacing: 0.5px;
+            font-size: 23px; font-weight: bold;
+            color: var(--text-primary); letter-spacing: 0.5px;
         }
         @keyframes marquee {
             0%, 15%  { transform: translateX(0); }
@@ -167,151 +186,333 @@
         }
         #airline-name.scrolling { animation: marquee 8s ease-in-out infinite alternate; }
 
-        #fl-sub { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; }
-        #fl-callsign { font-size: 15px; }
-        .cs-alpha   { color: var(--purple); }
-        .cs-numeric { color: var(--orange); }
-        #fl-country { font-size: 11px; color: var(--grey); }
-        #fl-page    { font-size: 11px; color: var(--dim); margin-left: auto; padding-right: 2px; }
+        #fl-sub { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+        #fl-callsign { font-size: 17px; }
+        .cs-alpha   { color: var(--text-primary); letter-spacing: 1px; }
+        .cs-numeric { color: var(--text-primary); letter-spacing: 1px; }
+        #fl-type    { font-size: 14px; color: var(--text-secondary); letter-spacing: 0.5px; }
+        #fl-country { font-size: 12px; color: var(--text-secondary); }
+        #fl-page    { font-size: 12px; color: var(--text-secondary); margin-left: auto; padding-right: 2px; }
 
         /* ── Route section ───────────────────────────────────────── */
         #fl-route-section {
-            padding: 12px 16px 8px;
+            padding: 10px 16px 8px;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle warm radial from corners */
+        #fl-route-section::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 40% 60% at 10% 80%, rgba(212,168,71,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 60% at 90% 80%, rgba(212,168,71,0.04) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         #fl-airports {
             display: flex; justify-content: space-between;
-            align-items: flex-end; margin-bottom: 8px;
+            align-items: flex-end; margin-bottom: 4px;
+            position: relative; z-index: 1;
         }
         .ap-block { display: flex; flex-direction: column; gap: 1px; }
         .ap-block.dest { align-items: flex-end; }
 
         .ap-iata {
-            font-size: clamp(30px, 9vw, 44px);
+            font-size: clamp(36px, 10vw, 52px);
             font-weight: bold; letter-spacing: 4px; line-height: 1;
         }
-        #ap-origin-iata { color: var(--origin); text-shadow: 0 0 12px rgba(0,229,160,0.4); }
-        #ap-dest-iata   { color: var(--dest);   text-shadow: 0 0 12px rgba(255,64,96,0.4); }
+        #ap-origin-iata { color: var(--text-primary); }
+        #ap-dest-iata   { color: var(--text-primary); }
 
         .ap-city {
-            font-size: 13px; color: #999; letter-spacing: 1.5px;
+            font-size: 11px; color: var(--text-secondary); letter-spacing: 1.5px;
             text-transform: uppercase;
-            max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .ap-block.dest .ap-city { text-align: right; }
 
-        /* Progress bar */
-        #prog-bar {
-            display: flex; align-items: center; gap: 8px;
-            height: 28px; opacity: 1; transition: opacity 0.3s;
+        /* SVG arc container */
+        #arc-container {
+            position: relative; z-index: 1;
+            height: 64px;
         }
-        #prog-bar.no-data { opacity: 0; pointer-events: none; }
-
-        .pb-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .pb-dot.origin { background: var(--origin); box-shadow: 0 0 8px var(--origin); }
-        .pb-dot.dest   { background: var(--dest);   box-shadow: 0 0 8px var(--dest); }
-
-        #pb-track {
-            flex: 1; height: 2px;
-            background: linear-gradient(to right, var(--origin), #334, var(--dest));
-            position: relative;
-        }
-        #pb-plane {
-            position: absolute; top: 50%;
-            transform: translateX(-50%) translateY(-50%);
-            font-size: 18px;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
-            transition: left 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        #route-arc {
+            width: 100%; height: 100%;
+            display: block;
+            overflow: visible;
         }
 
-        /* ── Stats section ───────────────────────────────────────── */
-        /*
-         * Three equal rows: altitude / speed / (distance | climb-rate)
-         * Each row flex:1 so they share the available height evenly.
-         * A small-caps label sits below each number for instant readability.
-         */
+        /* ── Stats grid ──────────────────────────────────────────── */
         #fl-stats-section {
             flex: 1;
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
 
-        .stat-block {
+        #stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
             flex: 1;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 10px 14px 8px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 8px 16px;
-            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.4s ease;
         }
-        .stat-block:last-child { border-bottom: none; }
 
-        /* Bottom row splits into two equal halves */
-        .stat-block.stat-split {
-            flex-direction: row;
-            padding: 0;
+        /* Colored accent line at top of each card */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            transition: box-shadow 0.4s ease;
         }
-        .stat-half {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 8px 16px;
-        }
-        .stat-half + .stat-half { border-left: 1px solid var(--border); }
+        .stat-card::before { background: var(--text-accent); opacity: 0.4; }
+        #sc-vs.vs-up::before   { background: var(--vs-up); opacity: 0.5; }
+        #sc-vs.vs-down::before { background: var(--vs-down); opacity: 0.5; }
+        #sc-vs.vs-lvl::before  { background: var(--dim); opacity: 0.3; }
 
-        .stat-numrow { display: flex; align-items: baseline; gap: 5px; }
+        /* Subtle warm inner glow */
+        .stat-card { background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(212,168,71,0.04) 0%, transparent 60%), var(--bg); }
+
+        .sc-val-row { display: flex; align-items: baseline; gap: 5px; }
 
         /* Hero numbers */
-        .stat-val {
-            font-size: clamp(34px, 10.5vw, 48px);
+        .sc-val {
+            font-size: clamp(26px, 7.5vw, 40px);
             font-weight: bold; letter-spacing: 1px; line-height: 1;
         }
-        /* Smaller variant for the split row */
-        .stat-val-sm {
-            font-size: clamp(22px, 7vw, 32px);
-            font-weight: bold; letter-spacing: 1px; line-height: 1;
+        .sc-unit { font-size: 11px; color: var(--text-secondary); letter-spacing: 1px; flex-shrink: 0; }
+        .sc-dir  { font-size: 11px; color: var(--text-secondary); margin-left: 2px; }
+
+        /* Small-caps label */
+        .sc-lbl {
+            font-size: 13px; letter-spacing: 3px;
+            color: var(--text-secondary); margin-top: 5px;
+            text-transform: uppercase;
         }
 
-        .stat-unit { font-size: 13px; color: var(--grey); letter-spacing: 1px; }
-
-        /* Small-caps row label — the "departure board" touch */
-        .stat-lbl {
-            font-size: 9px; letter-spacing: 3px;
-            color: var(--dim); margin-top: 4px;
+        /* Climb rate card */
+        .sc-vs {
+            font-size: clamp(15px, 4.5vw, 20px);
+            font-weight: bold; letter-spacing: 0.5px; line-height: 1.2;
         }
+        .sc-vs.up   { color: var(--vs-up); }
+        .sc-vs.down { color: var(--vs-down); }
+        .sc-vs.lvl  { color: var(--text-secondary); }
+        #sc-vs.vs-up   { background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(122,184,122,0.06) 0%, transparent 60%), var(--bg); }
+        #sc-vs.vs-down { background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(184,122,122,0.06) 0%, transparent 60%), var(--bg); }
 
-        /* Per-stat colours */
-        #sv-alt  { color: var(--amber); text-shadow: 0 0 20px rgba(255,170,51,0.3); }
-        #sv-spd  { color: var(--sky);   text-shadow: 0 0 20px rgba(68,204,255,0.3); }
-        #sv-dist { color: var(--lilac); text-shadow: 0 0 20px rgba(204,136,255,0.3); }
-        #sv-dir  { font-size: 13px; color: var(--grey); }
-
-        #sv-vs {
-            font-size: clamp(20px, 6.5vw, 28px);
-            font-weight: bold; letter-spacing: 0.5px; line-height: 1;
-        }
-        #sv-vs.up   { color: var(--green); }
-        #sv-vs.down { color: var(--red); }
-        #sv-vs.lvl  { color: var(--grey); }
-
-        .stat-vfpm { font-size: 12px; color: var(--grey); margin-top: 3px; letter-spacing: 0.5px; }
+        .sc-vfpm { font-size: 11px; color: var(--text-secondary); margin-top: 3px; letter-spacing: 0.5px; }
 
         /* ── Footer ──────────────────────────────────────────────── */
         #footer {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 4px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
+            padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--border-strong); flex-shrink: 0;
         }
-        #ft-status { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--dim); }
-        #ft-dot    { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-        #ft-count  { font-size: 10px; color: var(--dim); }
+        #ft-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+        #ft-dot    { width: 8px; height: 8px; border-radius: 50%; background: var(--status-ok); flex-shrink: 0; }
+        #ft-count  { font-size: 11px; color: var(--text-secondary); }
+
+        /* ── Entrance animation ──────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeUp 0.3s ease forwards; }
+
+        /* ── Mobile: let route arc fill the space ───────────────── */
+        @media (max-width: 639px) {
+            #fl-route-section {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                overflow: hidden;
+                padding: 10px 16px 0;
+                border-bottom: none;
+            }
+            #fl-airports { flex-shrink: 0; }
+            #arc-container {
+                flex: 1;
+                min-height: 60px;
+                max-height: clamp(160px, 24vh, 240px);
+                height: auto;
+            }
+            #fl-stats-section { flex: 0 0 168px; }
+            #stats-grid {
+                grid-template-rows: 1fr 1fr;
+                background: var(--border);
+                border-top: 1px solid var(--border);
+                height: 100%;
+            }
+            .stat-card {
+                padding: 8px 14px;
+                justify-content: center;
+                min-height: 0;
+            }
+            .sc-val  { font-size: clamp(24px, 8vw, 34px); }
+            .sc-lbl  { margin-top: 2px; }
+            .sc-vs   { font-size: clamp(13px, 4vw, 18px); }
+            .sc-vfpm { font-size: 11px; margin-top: 1px; }
+        }
+
+        /* ── Tablet layout (640px+) ──────────────────────────────── */
+        @media (min-width: 640px) {
+            #arc-container { height: 88px; }
+            .ap-iata { font-size: clamp(44px, 7vw, 60px); }
+            .sc-val  { font-size: clamp(30px, 4.5vw, 44px); }
+        }
+
+        /* ── Desktop layout (1024px+) ────────────────────────────── */
+        @media (min-width: 1024px) {
+            #flight-mode {
+                display: grid;
+                grid-template-columns: 58% 42%;
+                grid-template-rows: auto 1fr;
+                min-height: 0;
+            }
+            /* Airline: top-left cell */
+            #fl-airline {
+                grid-column: 1;
+                grid-row: 1;
+                border-bottom: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+                padding: 24px 40px;
+            }
+            #fl-airline #airline-logo { width: 72px; height: 72px; }
+            #fl-airline #airline-name { font-size: clamp(28px, 3vw, 38px); }
+            #fl-airline #fl-callsign  { font-size: clamp(20px, 2vw, 26px); }
+            #fl-airline #fl-type      { font-size: clamp(16px, 1.8vw, 20px); }
+            #fl-airline #fl-country   { font-size: 15px; }
+            #fl-airline #fl-page      { font-size: 15px; }
+            /* Route + arc: bottom-left cell */
+            #fl-route-section {
+                grid-column: 1;
+                grid-row: 2;
+                border-bottom: none;
+                border-right: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 24px 40px 20px;
+                overflow: hidden;
+                gap: 0;
+                min-height: 0;
+            }
+            /* Stats: full right column */
+            #fl-stats-section {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+            }
+            #fl-airports {
+                flex: 1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0;
+            }
+            .ap-iata {
+                font-size: clamp(72px, 8vw, 120px);
+                letter-spacing: 8px;
+            }
+            .ap-city {
+                font-size: 14px;
+                letter-spacing: 3px;
+                max-width: 280px;
+            }
+            #arc-container {
+                flex: 0 0 auto;
+                height: clamp(100px, 16vh, 180px);
+                width: 100%;
+                margin-top: 12px;
+            }
+            #route-arc {
+                width: 100%;
+                height: 100%;
+            }
+            #stats-grid {
+                height: 100%;
+            }
+            .stat-card {
+                padding: 0 32px;
+                justify-content: center;
+                gap: 8px;
+            }
+            .sc-val {
+                font-size: clamp(44px, 4.5vw, 72px);
+            }
+            .sc-lbl {
+                font-size: 14px;
+                letter-spacing: 4px;
+            }
+            .sc-vs {
+                font-size: clamp(22px, 2.4vw, 34px);
+            }
+            .sc-vfpm {
+                font-size: 13px;
+            }
+        }
+
+        /* ── Large desktop (1400px+) ─────────────────────────────── */
+        @media (min-width: 1400px) {
+            .ap-iata { font-size: clamp(90px, 8vw, 140px); }
+            .sc-val  { font-size: clamp(52px, 4vw, 80px); }
+        }
+
+        /* ── Clock mode desktop ──────────────────────────────────── */
+        @media (min-width: 1024px) {
+            #clock-left  { padding: 24px 40px; }
+            #clock-right { width: 46%; padding: 24px 24px; }
+            #big-time    { font-size: clamp(48px, 7vw, 80px); }
+        }
+
+        /* ── Split-flap cells ───────────────────────────────────── */
+        .flap {
+            display: inline-block;
+            background: var(--flap-bg);
+            border-bottom: 2px solid rgba(0,0,0,0.6);
+            padding: 2px 1px;
+            margin: 0 1px;
+            position: relative;
+            line-height: 1;
+            border-radius: 2px;
+        }
+        .flap::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0;
+            top: 50%;
+            height: 1px;
+            background: var(--flap-split);
+            pointer-events: none;
+        }
+        .flap-lg {
+            padding: 4px 3px;
+            margin: 0 2px;
+            border-bottom-width: 3px;
+        }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
+
+<main>
 
 <!-- Loading screen -->
 <div id="loading">
@@ -341,13 +542,13 @@
 <!-- App -->
 <div id="app" class="hidden">
 
-    <div id="header">
-        <div id="hd-logo">&#9992; PLANE TRACKER</div>
+    <header id="header">
+        <h1 id="hd-logo">&#9992; PLANE TRACKER</h1>
         <div id="hd-right">
             <span id="hd-time">--:--</span>
             <span id="hd-date">---</span>
         </div>
-    </div>
+    </header>
 
     <div id="main">
 
@@ -358,6 +559,7 @@
                 <div id="weather-line">
                     <span id="temp-val">--</span>
                     <span id="hum-val"> &middot; --%</span>
+                    <span id="pressure-val"></span>
                 </div>
                 <div id="no-flights">NO FLIGHTS OVERHEAD</div>
             </div>
@@ -380,13 +582,14 @@
                     </div>
                     <div id="fl-sub">
                         <span id="fl-callsign">---</span>
+                        <span id="fl-type"></span>
                         <span id="fl-country"></span>
                         <span id="fl-page"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Route + progress bar -->
+            <!-- Route + arc -->
             <div id="fl-route-section">
                 <div id="fl-airports">
                     <div class="ap-block">
@@ -398,76 +601,79 @@
                         <span class="ap-city"  id="ap-dest-city"></span>
                     </div>
                 </div>
-                <div id="prog-bar" class="no-data">
-                    <span class="pb-dot origin"></span>
-                    <div id="pb-track">
-                        <span id="pb-plane">&#9992;</span>
-                    </div>
-                    <span class="pb-dot dest"></span>
+                <div id="arc-container">
+                    <svg id="route-arc" viewBox="0 0 300 160"
+                         preserveAspectRatio="none"></svg>
                 </div>
             </div>
 
-            <!-- Stats: 3 equal rows -->
+            <!-- Stats: 2×2 card grid -->
             <div id="fl-stats-section">
+                <div id="stats-grid">
 
-                <!-- Row 1: Altitude -->
-                <div class="stat-block" id="sb-alt">
-                    <div class="stat-numrow">
-                        <span class="stat-val" id="sv-alt">--</span>
-                        <span class="stat-unit">ft</span>
-                    </div>
-                    <div class="stat-lbl">ALTITUDE</div>
-                </div>
-
-                <!-- Row 2: Speed -->
-                <div class="stat-block" id="sb-spd">
-                    <div class="stat-numrow">
-                        <span class="stat-val" id="sv-spd">--</span>
-                        <span class="stat-unit" id="lbl-spd">mph</span>
-                    </div>
-                    <div class="stat-lbl">SPEED</div>
-                </div>
-
-                <!-- Row 3: Distance | Climb rate -->
-                <div class="stat-block stat-split">
-                    <div class="stat-half">
-                        <div class="stat-numrow">
-                            <span class="stat-val stat-val-sm" id="sv-dist">--</span>
-                            <span class="stat-unit" id="lbl-dist">mi</span>
-                            <span id="sv-dir" class="stat-unit"></span>
+                    <!-- Altitude -->
+                    <div class="stat-card" id="sc-alt">
+                        <div class="sc-val-row">
+                            <span class="sc-val" id="sv-alt">--</span>
+                            <span class="sc-unit">ft</span>
                         </div>
-                        <div class="stat-lbl">DISTANCE</div>
+                        <div class="sc-lbl">ALTITUDE</div>
                     </div>
-                    <div class="stat-half" id="sh-vs">
-                        <div id="sv-vs" class="lvl">&#8594; Level</div>
-                        <div id="sv-vfpm" class="stat-vfpm"></div>
-                        <div class="stat-lbl">CLIMB RATE</div>
-                    </div>
-                </div>
 
+                    <!-- Speed -->
+                    <div class="stat-card" id="sc-spd">
+                        <div class="sc-val-row">
+                            <span class="sc-val" id="sv-spd">--</span>
+                            <span class="sc-unit" id="lbl-spd">mph</span>
+                        </div>
+                        <div class="sc-lbl">GND SPEED</div>
+                    </div>
+
+                    <!-- Distance -->
+                    <div class="stat-card" id="sc-dist">
+                        <div class="sc-val-row">
+                            <span class="sc-val" id="sv-dist">--</span>
+                            <span class="sc-unit" id="lbl-dist">mi</span>
+                            <span id="sv-dir" class="sc-dir"></span>
+                        </div>
+                        <div class="sc-lbl">DISTANCE</div>
+                    </div>
+
+                    <!-- Climb rate -->
+                    <div class="stat-card vs-lvl" id="sc-vs">
+                        <div id="sv-vs" class="sc-vs lvl">&#8594; Level</div>
+                        <div id="sv-vfpm" class="sc-vfpm"></div>
+                        <div class="sc-lbl">CLIMB RATE</div>
+                    </div>
+
+                </div>
             </div>
 
         </div><!-- /flight-mode -->
 
     </div><!-- /main -->
 
-    <div id="footer">
+    <footer id="footer">
         <div id="ft-status">
             <span id="ft-dot"></span>
             <span id="ft-msg">Starting&hellip;</span>
         </div>
         <span id="ft-count"></span>
-    </div>
+        <button id="unit-toggle">&deg;F</button>
+    </footer>
 
 </div><!-- /app -->
 
+</main>
+
 <script>
 // ─── Configuration ────────────────────────────────────────────────────────────
-const UNITS              = 'imperial'; // 'imperial' | 'metric'
+let   UNITS              = 'imperial';
 const FLIGHT_REFRESH_MS  = 60_000;
+const FLIGHT_IDLE_MS     = 15_000;  // poll faster when no flights overhead
 const WEATHER_REFRESH_MS = 600_000;
 const FLIGHT_CYCLE_MS    = 12_000;
-const BOX_RADIUS_MILES   = 50;
+const BOX_RADIUS_MILES   = 5;
 const MIN_ALT_FT         = 1000;
 
 // ─── WMO weather code → emoji ─────────────────────────────────────────────────
@@ -485,19 +691,22 @@ const WMO = {
 // ─── State ────────────────────────────────────────────────────────────────────
 let userLat = null, userLon = null;
 let flights  = [];
+let lastWeather = null;
 let fidx     = 0;
 let cycleTimer = null;
-const routeCache = new Map(); // callsign → route object | null
+const routeCache    = new Map();
+const aircraftCache = new Map();
 
 // ─── Unit helpers ─────────────────────────────────────────────────────────────
 const mToFt    = m  => Math.round(m * 3.28084);
-const mpsToMph = v  => Math.round(v * 2.23694);
-const mpsToKph = v  => Math.round(v * 3.6);
+const mpsToMph   = v => Math.round(v * 2.23694);
+const mpsToKph   = v => Math.round(v * 3.6);
+const mpsToKnots = v => Math.round(v * 1.94384);
 
-function speed(mps) { return UNITS === 'imperial' ? mpsToMph(mps) : mpsToKph(mps); }
+function speed(mps) { return mpsToKnots(mps); }  // aviation always uses knots
 function distFmt(mi) { return UNITS === 'imperial' ? mi.toFixed(1) : (mi * 1.60934).toFixed(1); }
 const distLbl = () => UNITS === 'imperial' ? 'mi'  : 'km';
-const spdLbl  = () => UNITS === 'imperial' ? 'mph' : 'km/h';
+const spdLbl  = () => 'kts';
 const tempLbl = () => UNITS === 'imperial' ? '°F'  : '°C';
 
 // ─── Maths ────────────────────────────────────────────────────────────────────
@@ -516,6 +725,30 @@ function boundingBox(lat, lon, r) {
     const dLat = r / 69;
     const dLon = r / (69 * Math.cos(lat * Math.PI / 180));
     return { lamin: lat-dLat, lomin: lon-dLon, lamax: lat+dLat, lomax: lon+dLon };
+}
+
+// ─── Bezier helpers ───────────────────────────────────────────────────────────
+function bezierPt(t, x0, y0, cx, cy, x1, y1) {
+    const u = 1 - t;
+    return {
+        x: u*u*x0 + 2*u*t*cx + t*t*x1,
+        y: u*u*y0 + 2*u*t*cy + t*t*y1,
+    };
+}
+function bezierTangent(t, x0, y0, cx, cy, x1, y1) {
+    return {
+        dx: 2*(1-t)*(cx-x0) + 2*t*(x1-cx),
+        dy: 2*(1-t)*(cy-y0) + 2*t*(y1-cy),
+    };
+}
+// Cubic bezier: B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
+function cubicPt(t, p0, p1, p2, p3) {
+    const u = 1 - t;
+    return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+}
+function cubicDeriv(t, p0, p1, p2, p3) {
+    const u = 1 - t;
+    return 3*u*u*(p1-p0) + 6*u*t*(p2-p1) + 3*t*t*(p3-p2);
 }
 
 // ─── Time / date ──────────────────────────────────────────────────────────────
@@ -539,6 +772,26 @@ function tickClock() {
     document.getElementById('hd-time').textContent  = t;
     document.getElementById('hd-date').textContent  = d;
     document.getElementById('big-time').textContent = t;
+}
+
+// ─── Animated number counter ──────────────────────────────────────────────────
+function animateVal(el, targetStr, duration = 700) {
+    const rawTarget = parseFloat(targetStr.replace(/[^0-9.]/g, ''));
+    if (isNaN(rawTarget)) { el.textContent = targetStr; return; }
+    const rawStart  = parseFloat(el.textContent.replace(/[^0-9.]/g, '')) || 0;
+    if (rawStart === rawTarget) { el.textContent = targetStr; return; }
+    const isFloat   = targetStr.includes('.');
+    const t0        = performance.now();
+    const diff      = rawTarget - rawStart;
+    function step(now) {
+        const p   = Math.min((now - t0) / duration, 1);
+        const ep  = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        const val = rawStart + diff * ep;
+        el.textContent = isFloat ? val.toFixed(1) : Math.round(val).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
+        else       el.textContent = targetStr; // snap to exact final value
+    }
+    requestAnimationFrame(step);
 }
 
 // ─── Fetch flights (OpenSky) ──────────────────────────────────────────────────
@@ -602,14 +855,31 @@ async function fetchRoute(callsign) {
     }
 }
 
+// ─── Fetch aircraft type (adsbdb.com) ─────────────────────────────────────────
+async function fetchAircraft(icao24) {
+    if (aircraftCache.has(icao24)) return aircraftCache.get(icao24);
+    try {
+        const res = await fetch(`https://api.adsbdb.com/v0/aircraft/${encodeURIComponent(icao24)}`);
+        if (!res.ok) { aircraftCache.set(icao24, null); return null; }
+        const json = await res.json();
+        const ac = json?.response?.aircraft;
+        if (!ac) { aircraftCache.set(icao24, null); return null; }
+        const info = { type: ac.type || ac.icao_type || null, manufacturer: ac.manufacturer || null };
+        aircraftCache.set(icao24, info);
+        return info;
+    } catch {
+        aircraftCache.set(icao24, null);
+        return null;
+    }
+}
+
 // ─── Fetch weather (Open-Meteo) ───────────────────────────────────────────────
 async function fetchWeather() {
-    const tu  = UNITS === 'imperial' ? '&temperature_unit=fahrenheit&wind_speed_unit=mph' : '';
     const url = `https://api.open-meteo.com/v1/forecast`
               + `?latitude=${userLat.toFixed(4)}&longitude=${userLon.toFixed(4)}`
-              + `&current=temperature_2m,relative_humidity_2m,weather_code`
+              + `&current=temperature_2m,relative_humidity_2m,weather_code,surface_pressure`
               + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
-              + `&forecast_days=3&timezone=auto${tu}`;
+              + `&forecast_days=3&timezone=auto`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Open-Meteo ${res.status}`);
     return res.json();
@@ -631,23 +901,151 @@ function setAirlineName(name) {
     });
 }
 
-// ─── Render: progress bar ────────────────────────────────────────────────────
-function renderProgress(f, route) {
-    const bar = document.getElementById('prog-bar');
-    if (!route?.originLat || !route?.destLat) { bar.classList.add('no-data'); return; }
-    const total = haversine(route.originLat, route.originLon, route.destLat, route.destLon);
-    if (total < 10) { bar.classList.add('no-data'); return; }
-    const flown = haversine(route.originLat, route.originLon, f.lat, f.lon);
-    const pct   = Math.max(3, Math.min(97, (flown / total) * 100));
-    document.getElementById('pb-plane').style.left = pct + '%';
-    bar.classList.remove('no-data');
+// ─── Render: SVG bezier arc ───────────────────────────────────────────────────
+function renderArc(f, route) {
+    const svg = document.getElementById('route-arc');
+    const container = document.getElementById('arc-container');
+    const W = Math.max(container.offsetWidth  || 300, 100);
+    const H = Math.max(container.offsetHeight || 120, 60);
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    // ── Layout constants ─────────────────────────────────────────────────────
+    const padX  = Math.round(W * 0.06);
+    const xOrig = padX;
+    const xDest = W - padX;
+    const yGnd  = H - 14; // ground level
+    const planeSize = Math.max(16, Math.round(H * 0.20));
+
+    // ── Phase fractions (by route distance) ──────────────────────────────────
+    const CLIMB_F   = 0.18;  // 18% = climb
+    const DESCENT_F = 0.22;  // 22% = descent (longer = gentler visual slope)
+    const CRUISE_F  = 1 - CLIMB_F - DESCENT_F; // 60% = cruise
+
+    const xTOC = xOrig + (xDest - xOrig) * CLIMB_F;
+    const xTOD = xDest - (xDest - xOrig) * DESCENT_F;
+
+    // ── Cruise altitude: computed so descent slope ≤ 3:1 (h:w) ──────────────
+    const descentW = xDest - xTOD;
+    const maxDropH = descentW * 2.8;
+    const yCrz = Math.max(Math.round(H * 0.08), Math.round(yGnd - maxDropH));
+
+    // ── Cubic bezier control points ──────────────────────────────────────────
+    // Climb: start near-vertical, arrive horizontal at TOC
+    const ccp1x = xOrig + (xTOC - xOrig) * 0.1, ccp1y = yGnd;
+    const ccp2x = xTOC - (xTOC - xOrig) * 0.1,  ccp2y = yCrz;
+    // Descent: depart horizontal, steepen, then gentle flare to ground
+    const dcp1x = xTOD + (xDest - xTOD) * 0.1, dcp1y = yCrz;
+    const dcp2x = xDest - (xDest - xTOD) * 0.1, dcp2y = yGnd - (yGnd - yCrz) * 0.15;
+
+    const pathD = [
+        `M ${xOrig},${yGnd}`,
+        `C ${ccp1x},${ccp1y} ${ccp2x},${ccp2y} ${xTOC},${yCrz}`,
+        `L ${xTOD},${yCrz}`,
+        `C ${dcp1x},${dcp1y} ${dcp2x},${dcp2y} ${xDest},${yGnd}`,
+    ].join(' ');
+
+    // ── Progress ─────────────────────────────────────────────────────────────
+    const hasData = !!(route?.originLat && route?.destLat);
+    let pct = 50;
+    if (hasData) {
+        const total = haversine(route.originLat, route.originLon, route.destLat, route.destLon);
+        if (total > 10) {
+            const flown = haversine(route.originLat, route.originLon, f.lat, f.lon);
+            pct = Math.max(2, Math.min(98, (flown / total) * 100));
+        }
+    }
+
+    // ── Plane position & angle ────────────────────────────────────────────────
+    let px, py, angle;
+    const tn = pct / 100;
+    if (tn <= CLIMB_F) {
+        const t = tn / CLIMB_F;
+        px    = cubicPt(t, xOrig, ccp1x, ccp2x, xTOC);
+        py    = cubicPt(t, yGnd,  ccp1y, ccp2y, yCrz);
+        angle = Math.atan2(cubicDeriv(t, yGnd, ccp1y, ccp2y, yCrz),
+                           cubicDeriv(t, xOrig, ccp1x, ccp2x, xTOC)) * 180 / Math.PI;
+    } else if (tn <= CLIMB_F + CRUISE_F) {
+        const t = (tn - CLIMB_F) / CRUISE_F;
+        px    = xTOC + (xTOD - xTOC) * t;
+        py    = yCrz;
+        angle = 0;
+    } else {
+        const t = (tn - CLIMB_F - CRUISE_F) / DESCENT_F;
+        px    = cubicPt(t, xTOD, dcp1x, dcp2x, xDest);
+        py    = cubicPt(t, yCrz, dcp1y, dcp2y, yGnd);
+        angle = Math.atan2(cubicDeriv(t, yCrz, dcp1y, dcp2y, yGnd),
+                           cubicDeriv(t, xTOD, dcp1x, dcp2x, xDest)) * 180 / Math.PI;
+    }
+
+    // Clip flown portion by x (left of plane)
+    const clipW = Math.max(px + 2, 0);
+
+    svg.innerHTML = `
+        <defs>
+            <linearGradient id="arc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stop-color="#e8e0d0" stop-opacity="1"/>
+                <stop offset="${CLIMB_F * 100}%"   stop-color="#d4a847" stop-opacity="0.9"/>
+                <stop offset="${(CLIMB_F + CRUISE_F) * 100}%" stop-color="#d4a847" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#e8e0d0" stop-opacity="1"/>
+            </linearGradient>
+            <clipPath id="flown-clip">
+                <rect x="0" y="0" width="${clipW}" height="${H + 10}"/>
+            </clipPath>
+            <filter id="glow-filter">
+                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+        </defs>
+
+        <!-- Ground line -->
+        <line x1="${xOrig}" y1="${yGnd + 6}" x2="${xDest}" y2="${yGnd + 6}"
+              stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+
+        <!-- Full route: dim dashed -->
+        <path d="${pathD}" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"
+              stroke-dasharray="6,10" fill="none"/>
+
+        <!-- Flown portion: bright gradient with glow -->
+        <path d="${pathD}" stroke="url(#arc-grad)" stroke-width="2.5"
+              fill="none" clip-path="url(#flown-clip)" filter="url(#glow-filter)"/>
+
+        <!-- Cruise altitude guide: faint horizontal line -->
+        <line x1="${xTOC}" y1="${yCrz}" x2="${xTOD}" y2="${yCrz}"
+              stroke="rgba(212,168,71,0.20)" stroke-width="1" stroke-dasharray="2,6"/>
+
+        <!-- Origin dot -->
+        <circle cx="${xOrig}" cy="${yGnd}" r="5" fill="#d4a847" opacity="0.25">
+            <animate attributeName="r" values="5;9;5" dur="2.4s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.25;0.05;0.25" dur="2.4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="${xOrig}" cy="${yGnd}" r="3.5" fill="#d4a847"/>
+
+        <!-- Destination dot -->
+        <circle cx="${xDest}" cy="${yGnd}" r="3.5" fill="#e8e0d0"
+                opacity="${hasData ? 0.7 : 0.3}"/>
+
+        <!-- Plane marker at current position (matches header ✈) -->
+        <text x="${px}" y="${py}"
+              transform="rotate(${angle}, ${px}, ${py})"
+              text-anchor="middle" dominant-baseline="central"
+              font-size="${planeSize}" fill="var(--text-primary)"
+              filter="url(#glow-filter)"
+              style="user-select:none">✈</text>
+    `;
 }
 
-// ─── Render: callsign with coloured letters/numbers ──────────────────────────
+// ─── Render: wrap text in split-flap cells ───────────────────────────────────
+function flapText(str, lg = false) {
+    const cls = lg ? 'flap flap-lg' : 'flap';
+    return [...str].map(ch => ch === ' '
+        ? '<span style="width:6px;display:inline-block"></span>'
+        : `<span class="${cls}">${ch}</span>`
+    ).join('');
+}
+
+// ─── Render: callsign with flap cells ────────────────────────────────────────
 function coloredCallsign(cs) {
-    const m = cs.match(/^([A-Z]+)(\d[\dA-Z]*)$/);
-    if (m) return `<span class="cs-alpha">${m[1]}</span><span class="cs-numeric">${m[2]}</span>`;
-    return `<span class="cs-alpha">${cs}</span>`;
+    return flapText(cs);
 }
 
 // ─── Render: full flight card ────────────────────────────────────────────────
@@ -666,52 +1064,72 @@ function renderFlight(f, idx, total) {
 
     // Flight number + paging
     document.getElementById('fl-callsign').innerHTML = coloredCallsign(f.callsign);
+    const ac = aircraftCache.get(f.icao24);
+    document.getElementById('fl-type').textContent    = ac?.type ? `· ${ac.type}` : '';
     document.getElementById('fl-country').textContent = (route?.airlineName && f.country) ? f.country : '';
     document.getElementById('fl-page').textContent    = total > 1 ? `${idx+1} / ${total}` : '';
 
-    // Route airports
-    const loading = route === undefined;
-    const unknown = route === null;
-    document.getElementById('ap-origin-iata').textContent = loading ? '···' : (route?.origin     || '???');
-    document.getElementById('ap-dest-iata').textContent   = loading ? '···' : (route?.dest       || '???');
+    // Route airports (split-flap cells)
+    const origCode = route === undefined ? '···' : (route?.origin || '???');
+    const destCode = route === undefined ? '···' : (route?.dest   || '???');
+    document.getElementById('ap-origin-iata').innerHTML = flapText(origCode, true);
+    document.getElementById('ap-dest-iata').innerHTML   = flapText(destCode, true);
     document.getElementById('ap-origin-city').textContent = route?.originName || '';
     document.getElementById('ap-dest-city').textContent   = route?.destName   || '';
 
-    // Progress bar
-    renderProgress(f, route);
+    // Arc
+    renderArc(f, route);
 
-    // Stats
-    document.getElementById('sv-alt').textContent  = f.altFt.toLocaleString();
-    document.getElementById('sv-spd').textContent  = f.spd;
-    document.getElementById('sv-dist').textContent = distFmt(f.distMi);
-    document.getElementById('sv-dir').textContent  = f.dir;
+    // Stats — animated counters
+    animateVal(document.getElementById('sv-alt'),  f.altFt.toLocaleString());
+    animateVal(document.getElementById('sv-spd'),  String(f.spd));
+    animateVal(document.getElementById('sv-dist'), distFmt(f.distMi));
+    document.getElementById('sv-dir').textContent   = f.dir;
     document.getElementById('lbl-dist').textContent = distLbl();
     document.getElementById('lbl-spd').textContent  = spdLbl();
 
+    // Climb rate
     const vsEl   = document.getElementById('sv-vs');
     const vfpmEl = document.getElementById('sv-vfpm');
-    const shVs   = document.getElementById('sh-vs');
+    const scVs   = document.getElementById('sc-vs');
     const absFpm = Math.abs(f.vrateFpm);
+
     if (f.vrateFpm > 200) {
-        vsEl.className = 'up';   vsEl.textContent = '↑ Climbing';
+        vsEl.className   = 'sc-vs up';
+        vsEl.textContent = '↑ Climbing';
         vfpmEl.textContent = `+${absFpm.toLocaleString()} fpm`;
-        shVs.style.borderLeftColor = 'var(--green)';
+        scVs.className   = 'stat-card vs-up';
     } else if (f.vrateFpm < -200) {
-        vsEl.className = 'down'; vsEl.textContent = '↓ Descending';
+        vsEl.className   = 'sc-vs down';
+        vsEl.textContent = '↓ Descending';
         vfpmEl.textContent = `\u2212${absFpm.toLocaleString()} fpm`;
-        shVs.style.borderLeftColor = 'var(--red)';
+        scVs.className   = 'stat-card vs-down';
     } else {
-        vsEl.className = 'lvl';  vsEl.textContent = '→ Level';
+        vsEl.className   = 'sc-vs lvl';
+        vsEl.textContent = '→ Level';
         vfpmEl.textContent = '';
-        shVs.style.borderLeftColor = '';
+        scVs.className   = 'stat-card vs-lvl';
     }
+}
+
+// ─── Unit conversion (API always returns metric) ─────────────────────────────
+function toTemp(c)  { return UNITS === 'imperial' ? Math.round(c * 9/5 + 32) : Math.round(c); }
+function pressFmt(hPa) {
+    return UNITS === 'imperial'
+        ? `${(hPa * 0.02953).toFixed(2)} inHg`
+        : `${Math.round(hPa)} hPa`;
 }
 
 // ─── Render: weather ─────────────────────────────────────────────────────────
 function renderWeather(data) {
+    if (!data) return;
     const cur = data.current;
-    document.getElementById('temp-val').textContent = `${Math.round(cur.temperature_2m)}${tempLbl()}`;
+    document.getElementById('temp-val').textContent = `${toTemp(cur.temperature_2m)}${tempLbl()}`;
     document.getElementById('hum-val').textContent  = ` \u00b7 ${Math.round(cur.relative_humidity_2m)}% RH`;
+    document.getElementById('pressure-val').textContent = ` \u00b7 ${pressFmt(cur.surface_pressure)}`;
+    // Update toggle label
+    const btn = document.getElementById('unit-toggle');
+    if (btn) btn.textContent = UNITS === 'imperial' ? '°F' : '°C';
     const grid = document.getElementById('forecast-grid');
     grid.innerHTML = '';
     const d = data.daily;
@@ -722,8 +1140,8 @@ function renderWeather(data) {
             <span class="fc-name">${fmtDayShort(d.time[i])}</span>
             <span class="fc-icon">${WMO[d.weather_code[i]] || '🌡️'}</span>
             <div class="fc-temps">
-                <span class="fc-max">${Math.round(d.temperature_2m_max[i])}°</span>
-                <span class="fc-min"> ${Math.round(d.temperature_2m_min[i])}°</span>
+                <span class="fc-max">${toTemp(d.temperature_2m_max[i])}°</span>
+                <span class="fc-min"> ${toTemp(d.temperature_2m_min[i])}°</span>
             </div>`;
         grid.appendChild(el);
     }
@@ -754,7 +1172,15 @@ function updateDisplay() {
     if (flights.length > 1) {
         cycleTimer = setTimeout(function cycle() {
             fidx = (fidx + 1) % flights.length;
-            renderFlight(flights[fidx], fidx, flights.length);
+            // Fade transition between flights
+            const fm = document.getElementById('flight-mode');
+            fm.style.opacity = '0';
+            fm.style.transform = 'translateY(4px)';
+            setTimeout(() => {
+                renderFlight(flights[fidx], fidx, flights.length);
+                fm.style.opacity = '1';
+                fm.style.transform = 'translateY(0)';
+            }, 220);
             cycleTimer = setTimeout(cycle, FLIGHT_CYCLE_MS);
         }, FLIGHT_CYCLE_MS);
     }
@@ -763,8 +1189,10 @@ function updateDisplay() {
 // ─── Refresh loops ────────────────────────────────────────────────────────────
 function setStatus(msg, ok = true) {
     document.getElementById('ft-msg').textContent = msg;
-    document.getElementById('ft-dot').style.background = ok ? 'var(--green)' : 'var(--red)';
+    document.getElementById('ft-dot').style.background = ok ? 'var(--status-ok)' : 'var(--status-err)';
 }
+
+let flightRefreshTimer = null;
 
 async function doFlightRefresh() {
     try {
@@ -773,19 +1201,31 @@ async function doFlightRefresh() {
         fidx = 0;
         updateDisplay();
         setStatus(`Updated ${fmtTime(new Date())}`);
-        const uncached = flights.filter(f => !routeCache.has(f.callsign));
-        if (uncached.length) {
-            await Promise.all(uncached.map(f => fetchRoute(f.callsign)));
+        const uncachedRoutes = flights.filter(f => !routeCache.has(f.callsign));
+        const uncachedAC    = flights.filter(f => !aircraftCache.has(f.icao24));
+        const fetches = [
+            ...uncachedRoutes.map(f => fetchRoute(f.callsign)),
+            ...uncachedAC.map(f => fetchAircraft(f.icao24)),
+        ];
+        if (fetches.length) {
+            await Promise.all(fetches);
             if (flights.length > 0) renderFlight(flights[fidx], fidx, flights.length);
         }
     } catch (e) {
         setStatus(`Error: ${e.message}`, false);
         console.error('Flight fetch:', e);
     }
+    scheduleNextFlightRefresh();
+}
+
+function scheduleNextFlightRefresh() {
+    clearTimeout(flightRefreshTimer);
+    const delay = flights.length > 0 ? FLIGHT_REFRESH_MS : FLIGHT_IDLE_MS;
+    flightRefreshTimer = setTimeout(doFlightRefresh, delay);
 }
 
 async function doWeatherRefresh() {
-    try { renderWeather(await fetchWeather()); }
+    try { lastWeather = await fetchWeather(); renderWeather(lastWeather); }
     catch (e) { console.warn('Weather fetch:', e); }
 }
 
@@ -795,9 +1235,8 @@ function startApp() {
     document.getElementById('app').classList.remove('hidden');
     tickClock();
     setInterval(tickClock, 1000);
-    doFlightRefresh();
+    doFlightRefresh();   // schedules its own next refresh
     doWeatherRefresh();
-    setInterval(doFlightRefresh,  FLIGHT_REFRESH_MS);
     setInterval(doWeatherRefresh, WEATHER_REFRESH_MS);
 }
 
@@ -806,6 +1245,11 @@ function showManualForm(reason) {
     document.getElementById('load-hint').classList.add('hidden');
     document.getElementById('loc-form').classList.remove('hidden');
 }
+
+document.getElementById('unit-toggle').addEventListener('click', () => {
+    UNITS = UNITS === 'imperial' ? 'metric' : 'imperial';
+    renderWeather(lastWeather);
+});
 
 document.getElementById('loc-go').addEventListener('click', () => {
     const lat = parseFloat(document.getElementById('in-lat').value.trim());
