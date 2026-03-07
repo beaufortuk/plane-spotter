@@ -1354,16 +1354,32 @@ document.getElementById('loc-go').addEventListener('click', () => {
 });
 
 if (!window.isSecureContext) {
+    console.warn('[GEO] Not a secure context — skipping geolocation');
     showManualForm('GPS unavailable (file:// or HTTP)');
 } else if (!navigator.geolocation) {
+    console.warn('[GEO] navigator.geolocation not available');
     showManualForm('Geolocation not supported by this browser.');
 } else {
+    console.log('[GEO] Starting geolocation (secure context, API available)');
+    console.log('[GEO] permissions API:', !!navigator.permissions);
+    if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then(p => {
+            console.log('[GEO] Permission state:', p.state);
+        }).catch(e => console.warn('[GEO] Permission query failed:', e));
+    }
     let geoAttempt = 0;
     function tryGeo() {
         geoAttempt++;
+        console.log(`[GEO] Attempt ${geoAttempt}/3 — calling getCurrentPosition (timeout 8s)`);
+        const t0 = Date.now();
         navigator.geolocation.getCurrentPosition(
-            pos => { userLat = pos.coords.latitude; userLon = pos.coords.longitude; startApp(); },
+            pos => {
+                console.log(`[GEO] Success in ${Date.now() - t0}ms — lat=${pos.coords.latitude.toFixed(4)}, lon=${pos.coords.longitude.toFixed(4)}, accuracy=${pos.coords.accuracy}m`);
+                userLat = pos.coords.latitude; userLon = pos.coords.longitude; startApp();
+            },
             err => {
+                const codes = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' };
+                console.error(`[GEO] Attempt ${geoAttempt} failed in ${Date.now() - t0}ms — code=${err.code} (${codes[err.code] || 'UNKNOWN'}), message="${err.message}"`);
                 if (err.code === 1) {
                     showManualForm('Location access denied.');
                 } else if (err.code === 3 && geoAttempt < 3) {
