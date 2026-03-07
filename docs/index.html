@@ -1382,11 +1382,28 @@ if (!window.isSecureContext) {
                 console.error(`[GEO] Attempt ${geoAttempt} failed in ${Date.now() - t0}ms — code=${err.code} (${codes[err.code] || 'UNKNOWN'}), message="${err.message}"`);
                 if (err.code === 1) {
                     showManualForm('Location access denied.');
-                } else if (err.code === 3 && geoAttempt < 3) {
+                } else if (err.code === 3 && geoAttempt < 2) {
                     document.getElementById('load-msg').innerHTML = 'Still locating<span class="blink">_</span>';
                     tryGeo();
                 } else {
-                    showManualForm(err.code === 2 ? 'Location unavailable — enter manually.' : 'Location timed out — enter manually.');
+                    // GPS failed — try IP-based geolocation as fallback
+                    console.log('[GEO] GPS failed, trying IP geolocation fallback');
+                    document.getElementById('load-msg').innerHTML = 'Locating by IP<span class="blink">_</span>';
+                    fetch('https://ipapi.co/json/')
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.latitude && d.longitude) {
+                                console.log(`[GEO] IP fallback success — lat=${d.latitude}, lon=${d.longitude}, city=${d.city}`);
+                                userLat = d.latitude; userLon = d.longitude; startApp();
+                            } else {
+                                console.error('[GEO] IP fallback returned no coords:', d);
+                                showManualForm('Could not determine location — enter manually.');
+                            }
+                        })
+                        .catch(e => {
+                            console.error('[GEO] IP fallback failed:', e);
+                            showManualForm('Could not determine location — enter manually.');
+                        });
                 }
             },
             { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
