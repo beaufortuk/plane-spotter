@@ -677,7 +677,8 @@
 // ─── Configuration ────────────────────────────────────────────────────────────
 let   UNITS              = 'imperial';
 const FLIGHT_REFRESH_MS  = 60_000;
-const FLIGHT_IDLE_MS     = 15_000;  // poll faster when no flights overhead
+const FLIGHT_IDLE_MS     = 30_000;  // poll faster when no flights overhead
+const FLIGHT_BACKOFF_MS  = 120_000; // back off on rate-limit (429)
 const WEATHER_REFRESH_MS = 600_000;
 const FLIGHT_CYCLE_MS    = 12_000;
 const BOX_RADIUS_MILES   = 5;
@@ -1280,15 +1281,17 @@ async function doFlightRefresh() {
             if (flights.length > 0) renderFlight(flights[fidx], fidx, flights.length);
         }
     } catch (e) {
-        setStatus(`Error: ${e.message}`, false);
+        const isRateLimit = /429/.test(e.message);
+        setStatus(isRateLimit ? 'Rate-limited, backing off\u2026' : `Error: ${e.message}`, false);
         console.error('Flight fetch:', e);
+        if (isRateLimit) { scheduleNextFlightRefresh(FLIGHT_BACKOFF_MS); return; }
     }
     scheduleNextFlightRefresh();
 }
 
-function scheduleNextFlightRefresh() {
+function scheduleNextFlightRefresh(overrideMs) {
     clearTimeout(flightRefreshTimer);
-    const delay = flights.length > 0 ? FLIGHT_REFRESH_MS : FLIGHT_IDLE_MS;
+    const delay = overrideMs || (flights.length > 0 ? FLIGHT_REFRESH_MS : FLIGHT_IDLE_MS);
     flightRefreshTimer = setTimeout(doFlightRefresh, delay);
 }
 
