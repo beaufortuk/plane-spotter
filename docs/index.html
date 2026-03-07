@@ -126,6 +126,43 @@
             border-radius: 3px; cursor: pointer;
         }
         #unit-toggle:hover { border-color: var(--text-accent); color: var(--text-accent); }
+        #settings-btn {
+            background: none; border: 1px solid var(--dim);
+            color: var(--text-secondary); font-size: 13px; padding: 3px 8px;
+            border-radius: 3px; cursor: pointer; line-height: 1;
+        }
+        #settings-btn:hover { border-color: var(--text-accent); color: var(--text-accent); }
+        #settings-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+        }
+        #settings-overlay.hidden { display: none; }
+        #settings-panel {
+            background: var(--bg); border: 1px solid var(--border-strong);
+            border-radius: 6px; padding: 20px; width: 320px; max-width: 90vw;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #settings-panel .sp-title {
+            font-size: 12px; color: var(--text-accent); letter-spacing: 2px;
+            text-align: center; margin-bottom: 12px;
+        }
+        #settings-panel .sp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        #settings-panel label { font-size: 11px; color: var(--text-secondary); width: 40px; flex-shrink: 0; }
+        #settings-panel input {
+            flex: 1; background: #0e0e1a; border: 1px solid #2a2a40;
+            color: var(--text-primary); font-family: 'Courier New', Courier, monospace;
+            font-size: 13px; padding: 5px 8px; border-radius: 3px; outline: none;
+        }
+        #settings-panel input:focus { border-color: var(--text-accent); }
+        #settings-panel .sp-hint { font-size: 10px; color: var(--text-secondary); text-align: center; margin-bottom: 12px; }
+        #settings-panel .sp-btns { display: flex; gap: 8px; justify-content: center; }
+        #settings-panel button {
+            background: none; border: 1px solid var(--dim); color: var(--text-secondary);
+            font-family: 'Courier New', Courier, monospace; font-size: 11px;
+            padding: 4px 16px; border-radius: 3px; cursor: pointer; letter-spacing: 1px;
+        }
+        #settings-panel button:hover { border-color: var(--text-accent); color: var(--text-accent); }
+        #settings-panel button.sp-save { border-color: var(--text-accent); color: var(--text-accent); }
         #no-flights   { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; margin-top: 6px; }
         #clock-right  {
             width: 52%; display: flex; flex-direction: column;
@@ -680,7 +717,27 @@
         </div>
         <span id="ft-count"></span>
         <button id="unit-toggle">&deg;F</button>
+        <button id="settings-btn">&#9881;</button>
     </footer>
+
+    <div id="settings-overlay" class="hidden">
+        <div id="settings-panel">
+            <div class="sp-title">SETTINGS</div>
+            <div class="sp-hint">OpenSky account (optional, for higher rate limits)</div>
+            <div class="sp-row">
+                <label>USER</label>
+                <input type="text" id="set-osky-user" placeholder="username or email" autocomplete="username">
+            </div>
+            <div class="sp-row">
+                <label>PASS</label>
+                <input type="password" id="set-osky-pass" placeholder="password" autocomplete="current-password">
+            </div>
+            <div class="sp-btns">
+                <button id="set-cancel">CANCEL</button>
+                <button id="set-save" class="sp-save">SAVE</button>
+            </div>
+        </div>
+    </div>
 
 </div><!-- /app -->
 
@@ -1349,6 +1406,32 @@ function showManualForm(reason) {
 document.getElementById('unit-toggle').addEventListener('click', () => {
     UNITS = UNITS === 'imperial' ? 'metric' : 'imperial';
     renderWeather(lastWeather);
+});
+
+// Settings panel
+document.getElementById('settings-btn').addEventListener('click', () => {
+    document.getElementById('set-osky-user').value = localStorage.getItem('osky_user') || '';
+    document.getElementById('set-osky-pass').value = localStorage.getItem('osky_pass') || '';
+    document.getElementById('settings-overlay').classList.remove('hidden');
+});
+document.getElementById('set-cancel').addEventListener('click', () => {
+    document.getElementById('settings-overlay').classList.add('hidden');
+});
+document.getElementById('settings-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('settings-overlay').classList.add('hidden');
+});
+document.getElementById('set-save').addEventListener('click', () => {
+    const u = document.getElementById('set-osky-user').value.trim();
+    const p = document.getElementById('set-osky-pass').value;
+    if (u && p) {
+        localStorage.setItem('osky_user', u);
+        localStorage.setItem('osky_pass', p);
+    } else {
+        localStorage.removeItem('osky_user');
+        localStorage.removeItem('osky_pass');
+    }
+    loadOskyAuth();
+    document.getElementById('settings-overlay').classList.add('hidden');
 });
 
 document.getElementById('loc-go').addEventListener('click', () => {
