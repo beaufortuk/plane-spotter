@@ -582,14 +582,14 @@
             <input type="text" id="in-lon" placeholder="e.g. -0.1278" inputmode="decimal">
         </div>
         <div class="lf-sep"></div>
-        <div class="lf-sub">OpenSky account (optional, for higher rate limits):</div>
+        <div class="lf-sub">OpenSky API client (optional, for higher rate limits):</div>
         <div class="lf-row">
-            <label>USER</label>
-            <input type="text" id="in-osky-user" placeholder="username or email" autocomplete="username">
+            <label>ID</label>
+            <input type="text" id="in-osky-id" placeholder="client_id" autocomplete="off">
         </div>
         <div class="lf-row">
-            <label>PASS</label>
-            <input type="password" id="in-osky-pass" placeholder="password" autocomplete="current-password">
+            <label>SECRET</label>
+            <input type="password" id="in-osky-secret" placeholder="client_secret" autocomplete="off">
         </div>
         <div class="lf-err" id="loc-err"></div>
         <button id="loc-go">GO &#9992;</button>
@@ -723,14 +723,14 @@
     <div id="settings-overlay" class="hidden">
         <div id="settings-panel">
             <div class="sp-title">SETTINGS</div>
-            <div class="sp-hint">OpenSky account (optional, for higher rate limits)</div>
+            <div class="sp-hint">OpenSky API client (optional, for higher rate limits)</div>
             <div class="sp-row">
-                <label>USER</label>
-                <input type="text" id="set-osky-user" placeholder="username or email" autocomplete="username">
+                <label>ID</label>
+                <input type="text" id="set-osky-id" placeholder="client_id" autocomplete="off">
             </div>
             <div class="sp-row">
-                <label>PASS</label>
-                <input type="password" id="set-osky-pass" placeholder="password" autocomplete="current-password">
+                <label>SECRET</label>
+                <input type="password" id="set-osky-secret" placeholder="client_secret" autocomplete="off">
             </div>
             <div class="sp-btns">
                 <button id="set-cancel">CANCEL</button>
@@ -872,16 +872,35 @@ function animateVal(el, targetStr, duration = 700) {
     requestAnimationFrame(step);
 }
 
-// ─── OpenSky auth (optional, from localStorage) ─────────────────────────────
-let OSKY_HEADERS = {};
-function loadOskyAuth() {
-    const u = localStorage.getItem('osky_user');
-    const p = localStorage.getItem('osky_pass');
-    OSKY_HEADERS = u && p
-        ? { 'Authorization': 'Basic ' + btoa(`${u}:${p}`) }
-        : {};
+// ─── OpenSky OAuth2 auth (optional, from localStorage) ──────────────────────
+const OSKY_TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
+let oskyToken = null;
+let oskyTokenExpiry = 0;
+
+async function getOskyHeaders() {
+    const cid = localStorage.getItem('osky_client_id');
+    const sec = localStorage.getItem('osky_client_secret');
+    if (!cid || !sec) return {};
+    // Refresh token if expired or within 60s of expiry
+    if (!oskyToken || Date.now() > oskyTokenExpiry - 60_000) {
+        try {
+            const res = await fetch(OSKY_TOKEN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `grant_type=client_credentials&client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(sec)}`,
+            });
+            if (!res.ok) throw new Error(`OAuth ${res.status}`);
+            const data = await res.json();
+            oskyToken = data.access_token;
+            oskyTokenExpiry = Date.now() + (data.expires_in || 1800) * 1000;
+        } catch (e) {
+            console.warn('OpenSky OAuth failed:', e);
+            oskyToken = null;
+            return {};
+        }
+    }
+    return { 'Authorization': `Bearer ${oskyToken}` };
 }
-loadOskyAuth();
 
 // ─── Fetch flights (OpenSky) ──────────────────────────────────────────────────
 async function fetchFlights() {
@@ -889,7 +908,7 @@ async function fetchFlights() {
     const url = `https://opensky-network.org/api/states/all`
               + `?lamin=${bb.lamin.toFixed(4)}&lomin=${bb.lomin.toFixed(4)}`
               + `&lamax=${bb.lamax.toFixed(4)}&lomax=${bb.lomax.toFixed(4)}`;
-    const res = await fetch(url, { headers: OSKY_HEADERS });
+    const res = await fetch(url, { headers: await getOskyHeaders() });
     if (!res.ok) throw new Error(`OpenSky ${res.status}`);
     const json = await res.json();
     if (!json.states) return [];
@@ -1396,11 +1415,11 @@ function showManualForm(reason) {
     document.getElementById('load-msg').textContent = reason;
     document.getElementById('load-hint').classList.add('hidden');
     document.getElementById('loc-form').classList.remove('hidden');
-    // Pre-fill saved OpenSky credentials
-    const su = localStorage.getItem('osky_user');
-    const sp = localStorage.getItem('osky_pass');
-    if (su) document.getElementById('in-osky-user').value = su;
-    if (sp) document.getElementById('in-osky-pass').value = sp;
+    // Pre-fill saved OpenSky API client
+    const sc = localStorage.getItem('osky_client_id');
+    const ss = localStorage.getItem('osky_client_secret');
+    if (sc) document.getElementById('in-osky-id').value = sc;
+    if (ss) document.getElementById('in-osky-secret').value = ss;
 }
 
 document.getElementById('unit-toggle').addEventListener('click', () => {
@@ -1410,8 +1429,8 @@ document.getElementById('unit-toggle').addEventListener('click', () => {
 
 // Settings panel
 document.getElementById('settings-btn').addEventListener('click', () => {
-    document.getElementById('set-osky-user').value = localStorage.getItem('osky_user') || '';
-    document.getElementById('set-osky-pass').value = localStorage.getItem('osky_pass') || '';
+    document.getElementById('set-osky-id').value = localStorage.getItem('osky_client_id') || '';
+    document.getElementById('set-osky-secret').value = localStorage.getItem('osky_client_secret') || '';
     document.getElementById('settings-overlay').classList.remove('hidden');
 });
 document.getElementById('set-cancel').addEventListener('click', () => {
@@ -1421,16 +1440,16 @@ document.getElementById('settings-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('settings-overlay').classList.add('hidden');
 });
 document.getElementById('set-save').addEventListener('click', () => {
-    const u = document.getElementById('set-osky-user').value.trim();
-    const p = document.getElementById('set-osky-pass').value;
-    if (u && p) {
-        localStorage.setItem('osky_user', u);
-        localStorage.setItem('osky_pass', p);
+    const cid = document.getElementById('set-osky-id').value.trim();
+    const sec = document.getElementById('set-osky-secret').value.trim();
+    if (cid && sec) {
+        localStorage.setItem('osky_client_id', cid);
+        localStorage.setItem('osky_client_secret', sec);
     } else {
-        localStorage.removeItem('osky_user');
-        localStorage.removeItem('osky_pass');
+        localStorage.removeItem('osky_client_id');
+        localStorage.removeItem('osky_client_secret');
     }
-    loadOskyAuth();
+    oskyToken = null; oskyTokenExpiry = 0; // force token refresh
     document.getElementById('settings-overlay').classList.add('hidden');
 });
 
@@ -1442,17 +1461,17 @@ document.getElementById('loc-go').addEventListener('click', () => {
     if (isNaN(lon) || lon < -180 || lon > 180)  { err.textContent = 'Longitude must be −180 to 180'; return; }
     err.textContent = '';
     userLat = lat; userLon = lon;
-    // Save OpenSky credentials if provided
-    const oskyU = document.getElementById('in-osky-user').value.trim();
-    const oskyP = document.getElementById('in-osky-pass').value;
-    if (oskyU && oskyP) {
-        localStorage.setItem('osky_user', oskyU);
-        localStorage.setItem('osky_pass', oskyP);
+    // Save OpenSky API client if provided
+    const oCid = document.getElementById('in-osky-id').value.trim();
+    const oSec = document.getElementById('in-osky-secret').value.trim();
+    if (oCid && oSec) {
+        localStorage.setItem('osky_client_id', oCid);
+        localStorage.setItem('osky_client_secret', oSec);
     } else {
-        localStorage.removeItem('osky_user');
-        localStorage.removeItem('osky_pass');
+        localStorage.removeItem('osky_client_id');
+        localStorage.removeItem('osky_client_secret');
     }
-    loadOskyAuth();
+    oskyToken = null; oskyTokenExpiry = 0;
     startApp();
 });
 
