@@ -679,7 +679,7 @@
 let   UNITS              = localStorage.getItem('pt-units') || 'imperial';
 const FLIGHT_REFRESH_MS  = 60_000;
 const FLIGHT_IDLE_MS     = 30_000;  // poll faster when no flights overhead
-const FLIGHT_BACKOFF_MS  = 120_000; // back off on rate-limit (429)
+const FLIGHT_BACKOFF_MS  = 30_000;  // back off on error (Worker absorbs 429s)
 const WEATHER_REFRESH_MS = 600_000;
 const FLIGHT_CYCLE_MS    = 12_000;
 const BOX_RADIUS_MILES   = 5;
