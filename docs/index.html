@@ -507,6 +507,13 @@
             border-bottom-width: 3px;
         }
 
+        @keyframes flapSettle {
+            0%   { transform: scaleY(0.85); }
+            50%  { transform: scaleY(1.05); }
+            100% { transform: scaleY(1); }
+        }
+        .flap.settling { animation: flapSettle 0.1s ease-out; }
+
         .hidden { display: none !important; }
     </style>
 </head>
@@ -1043,13 +1050,70 @@ function flapText(str, lg = false) {
     ).join('');
 }
 
+// ─── Render: animated split-flap cycling ─────────────────────────────────────
+const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+function flapAnimate(element, targetText, lg = false) {
+    const cls = lg ? 'flap flap-lg' : 'flap';
+    const chars = [...targetText];
+    const len = chars.length;
+    const settled = new Array(len).fill(false);
+    const TICK = 40;           // ms between random character swaps
+    const STAGGER = 80;        // ms delay between each position settling
+    const START_DELAY = 120;   // ms before first char settles
+
+    // Build initial random flap spans
+    const spans = chars.map((ch, i) => {
+        if (ch === ' ') { settled[i] = true; return null; }
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = FLAP_CHARS[Math.floor(Math.random() * FLAP_CHARS.length)];
+        return span;
+    });
+
+    element.innerHTML = '';
+    spans.forEach((span, i) => {
+        if (!span) {
+            const spacer = document.createElement('span');
+            spacer.style.cssText = 'width:6px;display:inline-block';
+            element.appendChild(spacer);
+        } else {
+            element.appendChild(span);
+        }
+    });
+
+    // Cycle random chars on unsettled positions
+    const ticker = setInterval(() => {
+        for (let i = 0; i < len; i++) {
+            if (!settled[i] && spans[i]) {
+                spans[i].textContent = FLAP_CHARS[Math.floor(Math.random() * FLAP_CHARS.length)];
+            }
+        }
+    }, TICK);
+
+    // Settle each char left-to-right
+    chars.forEach((ch, i) => {
+        if (settled[i]) return;
+        setTimeout(() => {
+            settled[i] = true;
+            spans[i].textContent = ch;
+            spans[i].classList.add('settling');
+            spans[i].addEventListener('animationend', () => {
+                spans[i].classList.remove('settling');
+            }, { once: true });
+            // All done?
+            if (settled.every(Boolean)) clearInterval(ticker);
+        }, START_DELAY + i * STAGGER);
+    });
+}
+
 // ─── Render: callsign with flap cells ────────────────────────────────────────
 function coloredCallsign(cs) {
     return flapText(cs);
 }
 
 // ─── Render: full flight card ────────────────────────────────────────────────
-function renderFlight(f, idx, total) {
+function renderFlight(f, idx, total, animate = false) {
     const route = routeCache.get(f.callsign);
 
     // Airline logo + name
@@ -1063,7 +1127,12 @@ function renderFlight(f, idx, total) {
     setAirlineName(route?.airlineName || f.country || '');
 
     // Flight number + paging
-    document.getElementById('fl-callsign').innerHTML = coloredCallsign(f.callsign);
+    const csEl = document.getElementById('fl-callsign');
+    if (animate) {
+        flapAnimate(csEl, f.callsign);
+    } else {
+        csEl.innerHTML = coloredCallsign(f.callsign);
+    }
     const ac = aircraftCache.get(f.icao24);
     document.getElementById('fl-type').textContent    = ac?.type ? `· ${ac.type}` : '';
     document.getElementById('fl-country').textContent = (route?.airlineName && f.country) ? f.country : '';
@@ -1072,8 +1141,15 @@ function renderFlight(f, idx, total) {
     // Route airports (split-flap cells)
     const origCode = route === undefined ? '···' : (route?.origin || '???');
     const destCode = route === undefined ? '···' : (route?.dest   || '???');
-    document.getElementById('ap-origin-iata').innerHTML = flapText(origCode, true);
-    document.getElementById('ap-dest-iata').innerHTML   = flapText(destCode, true);
+    const origEl = document.getElementById('ap-origin-iata');
+    const destEl = document.getElementById('ap-dest-iata');
+    if (animate) {
+        flapAnimate(origEl, origCode, true);
+        flapAnimate(destEl, destCode, true);
+    } else {
+        origEl.innerHTML = flapText(origCode, true);
+        destEl.innerHTML = flapText(destCode, true);
+    }
     document.getElementById('ap-origin-city').textContent = route?.originName || '';
     document.getElementById('ap-dest-city').textContent   = route?.destName   || '';
 
@@ -1166,21 +1242,13 @@ function updateDisplay() {
     }
     showFlight();
     if (fidx >= flights.length) fidx = 0;
-    renderFlight(flights[fidx], fidx, flights.length);
+    renderFlight(flights[fidx], fidx, flights.length, true);
     document.getElementById('ft-count').textContent =
         `${flights.length} flight${flights.length !== 1 ? 's' : ''} overhead`;
     if (flights.length > 1) {
         cycleTimer = setTimeout(function cycle() {
             fidx = (fidx + 1) % flights.length;
-            // Fade transition between flights
-            const fm = document.getElementById('flight-mode');
-            fm.style.opacity = '0';
-            fm.style.transform = 'translateY(4px)';
-            setTimeout(() => {
-                renderFlight(flights[fidx], fidx, flights.length);
-                fm.style.opacity = '1';
-                fm.style.transform = 'translateY(0)';
-            }, 220);
+            renderFlight(flights[fidx], fidx, flights.length, true);
             cycleTimer = setTimeout(cycle, FLIGHT_CYCLE_MS);
         }, FLIGHT_CYCLE_MS);
     }
