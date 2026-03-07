@@ -895,6 +895,7 @@ async function getOskyHeaders() {
             oskyTokenExpiry = Date.now() + (data.expires_in || 1800) * 1000;
         } catch (e) {
             console.warn('OpenSky OAuth failed:', e);
+            setStatus('Auth failed — check API credentials', false);
             oskyToken = null;
             return {};
         }
@@ -1451,6 +1452,8 @@ document.getElementById('set-save').addEventListener('click', () => {
     }
     oskyToken = null; oskyTokenExpiry = 0; // force token refresh
     document.getElementById('settings-overlay').classList.add('hidden');
+    // Immediately retry flight fetch with new credentials
+    if (userLat != null) doFlightRefresh();
 });
 
 document.getElementById('loc-go').addEventListener('click', () => {
