@@ -803,7 +803,7 @@ function animateVal(el, targetStr, duration = 700) {
 }
 
 // ─── Fetch flights (adsb.fi via Cloudflare Worker proxy) ─────────────────────
-const ADSB_PROXY = 'https://plane-tracker-proxy.beaufortuk.workers.dev';
+const ADSB_PROXY = 'https://plane-tracker-proxy.plane-tracker-proxy.workers.dev';
 const NM_TO_MI   = 1.15078;
 
 async function fetchFlights() {
@@ -812,8 +812,9 @@ async function fetchFlights() {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Flight API ${res.status}`);
     const json = await res.json();
-    if (!json.ac || !json.ac.length) return [];
-    return json.ac
+    const ac = json.ac || json.aircraft || [];
+    if (!ac.length) return [];
+    return ac
         .filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && typeof a.alt_baro === 'number')
         .map(a => {
             const distMi = a.dst != null ? a.dst * NM_TO_MI : haversine(userLat, userLon, a.lat, a.lon);
