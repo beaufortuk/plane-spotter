@@ -883,22 +883,18 @@ async function getOskyHeaders() {
     if (!cid || !sec) return {};
     // Refresh token if expired or within 60s of expiry
     if (!oskyToken || Date.now() > oskyTokenExpiry - 60_000) {
-        try {
-            const res = await fetch(OSKY_TOKEN_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `grant_type=client_credentials&client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(sec)}`,
-            });
-            if (!res.ok) throw new Error(`OAuth ${res.status}`);
-            const data = await res.json();
-            oskyToken = data.access_token;
-            oskyTokenExpiry = Date.now() + (data.expires_in || 1800) * 1000;
-        } catch (e) {
-            console.warn('OpenSky OAuth failed:', e);
-            setStatus('Auth failed — check API credentials', false);
+        const res = await fetch(OSKY_TOKEN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `grant_type=client_credentials&client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(sec)}`,
+        });
+        if (!res.ok) {
             oskyToken = null;
-            return {};
+            throw new Error(`OpenSky auth failed (${res.status}) — check API client ID & secret in ⚙ settings`);
         }
+        const data = await res.json();
+        oskyToken = data.access_token;
+        oskyTokenExpiry = Date.now() + (data.expires_in || 1800) * 1000;
     }
     return { 'Authorization': `Bearer ${oskyToken}` };
 }
