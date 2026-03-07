@@ -677,12 +677,12 @@
 <script>
 // ─── Configuration ────────────────────────────────────────────────────────────
 let   UNITS              = localStorage.getItem('pt-units') || 'imperial';
-const FLIGHT_REFRESH_MS  = 60_000;
-const FLIGHT_IDLE_MS     = 30_000;  // poll faster when no flights overhead
+const FLIGHT_REFRESH_MS  = 30_000;  // 30s — fast enough to catch jets in 5mi zone
+const FLIGHT_IDLE_MS     = 15_000;  // 15s — rapid scan when sky is empty
 const FLIGHT_BACKOFF_MS  = 30_000;  // back off on error (Worker absorbs 429s)
 const WEATHER_REFRESH_MS = 600_000;
 const FLIGHT_CYCLE_MS    = 12_000;
-const BOX_RADIUS_MILES   = 5;
+const BOX_RADIUS_MILES   = 5;      // 5mi — jets cross 10mi window in ~70s
 const MIN_ALT_FT         = 1000;
 
 // ─── WMO weather code → emoji ─────────────────────────────────────────────────
@@ -730,6 +730,26 @@ function haversine(lat1, lon1, lat2, lon2) {
 function toCardinal(deg) {
     return ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg/45) % 8];
 }
+// Route plausibility: is aircraft roughly "on" the claimed route?
+// Uses triangle inequality — sum of distances to endpoints vs direct route distance.
+// If detour ratio > 1.5, route data is likely stale/wrong (airlines reuse callsigns).
+function isRoutePlausible(route, acLat, acLon) {
+    if (!route?.originLat || !route?.destLat) return true; // can't validate → show it
+    const oLat = parseFloat(route.originLat), oLon = parseFloat(route.originLon);
+    const dLat = parseFloat(route.destLat),   dLon = parseFloat(route.destLon);
+    if (isNaN(oLat) || isNaN(dLat)) return true;
+    const routeDist  = haversine(oLat, oLon, dLat, dLon);
+    if (routeDist < 50) return true; // very short route, skip check
+    const toOrig = haversine(acLat, acLon, oLat, oLon);
+    const toDest = haversine(acLat, acLon, dLat, dLon);
+    const detour = (toOrig + toDest) / routeDist;
+    if (detour > 1.5) {
+        console.warn(`[ROUTE] Implausible: ${route.origin}→${route.dest} detour=${detour.toFixed(2)}x (ac@${acLat.toFixed(2)},${acLon.toFixed(2)})`);
+        return false;
+    }
+    return true;
+}
+
 function bearing(lat1, lon1, lat2, lon2) {
     const toRad = d => d * Math.PI / 180;
     const dLon = toRad(lon2 - lon1);
@@ -1127,7 +1147,9 @@ function coloredCallsign(cs) {
 
 // ─── Render: full flight card ────────────────────────────────────────────────
 function renderFlight(f, idx, total, animate = false) {
-    const route = routeCache.get(f.callsign);
+    let route = routeCache.get(f.callsign);
+    // Discard route if aircraft position doesn't match the claimed airports
+    if (route && !isRoutePlausible(route, f.lat, f.lon)) route = null;
 
     // Airline logo + name
     const logoEl = document.getElementById('airline-logo');
