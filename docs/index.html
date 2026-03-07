@@ -802,13 +802,21 @@ function animateVal(el, targetStr, duration = 700) {
     requestAnimationFrame(step);
 }
 
+// ─── OpenSky auth (optional, from URL params) ───────────────────────────────
+const oskyParams = new URLSearchParams(window.location.search);
+const OSKY_USER  = oskyParams.get('osky_user');
+const OSKY_PASS  = oskyParams.get('osky_pass');
+const OSKY_HEADERS = OSKY_USER && OSKY_PASS
+    ? { 'Authorization': 'Basic ' + btoa(`${OSKY_USER}:${OSKY_PASS}`) }
+    : {};
+
 // ─── Fetch flights (OpenSky) ──────────────────────────────────────────────────
 async function fetchFlights() {
     const bb  = boundingBox(userLat, userLon, BOX_RADIUS_MILES);
     const url = `https://opensky-network.org/api/states/all`
               + `?lamin=${bb.lamin.toFixed(4)}&lomin=${bb.lomin.toFixed(4)}`
               + `&lamax=${bb.lamax.toFixed(4)}&lomax=${bb.lomax.toFixed(4)}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: OSKY_HEADERS });
     if (!res.ok) throw new Error(`OpenSky ${res.status}`);
     const json = await res.json();
     if (!json.states) return [];
