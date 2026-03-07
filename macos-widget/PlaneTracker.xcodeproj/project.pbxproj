@@ -1,0 +1,542 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		02545F5CCEAF5A6E73B8670D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 567EBAC2E313B6EECD13AAEB /* Assets.xcassets */; };
+		0BA9E9ACE142EDFFAD10E003 /* PlaneTrackerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874D4BF9484203C43FF73A7A /* PlaneTrackerWidget.swift */; };
+		122C883D992E2B65F1FBFD08 /* WidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C4A41A5ADE5DCEDE87384C /* WidgetIntent.swift */; };
+		180D444F2BD306008B6BB8B4 /* ArcShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B0CED426ECB63E0E2F0323 /* ArcShape.swift */; };
+		1B93252BB6F6280D253FF691 /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B80F06DE2F9BC28DBF9356C /* WeatherData.swift */; };
+		32A3701DEB713AD9BCCAFB9F /* RouteData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA7CCBC871C6A3AE6C4A714 /* RouteData.swift */; };
+		3F868E3F736AC7C4B17671CE /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64C20908A8497087E1E5EFBD /* MediumWidgetView.swift */; };
+		5C993F0F9102BA09EB3743E4 /* GeoMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7FBEE6FAF354531596CC1B /* GeoMath.swift */; };
+		6769898DC056E37F05CD51C1 /* PlaneTrackerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 164FADA95C19A300EDBC66FF /* PlaneTrackerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6F47CDF70D13A2F7F01BAD23 /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6355DA8511C97151163E16E1 /* SmallWidgetView.swift */; };
+		7D2B7C6D7636B41F4FBFB4F4 /* FlapCharacter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A335035A98B536913DC98DE1 /* FlapCharacter.swift */; };
+		7F1E04EA59FCEDB632808F35 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34323ABFC1E1273ECE537FC /* WeatherService.swift */; };
+		86C13254B512D7E78C71DDD2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504A8E11C570EC437F4D3397 /* Assets.xcassets */; };
+		90CBD6D858C87FD080B3E032 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D59EE69F362AECC398BA7B8 /* ContentView.swift */; };
+		9888B1501BCE57192A59584F /* PlaneTrackerBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7CF87D7B280F1D79753DFDF /* PlaneTrackerBundle.swift */; };
+		A222D3A8A25831383D8C50A0 /* FlightService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302C509E56785CE30E4211E /* FlightService.swift */; };
+		A34414A23CCE83EBEFD716B4 /* WidgetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9DEB0510251125516A3D29 /* WidgetEntry.swift */; };
+		A7E6AE5790F2E8E3FF30C0F3 /* WMOCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A73F64609F0F003C62C39D8 /* WMOCodes.swift */; };
+		B67EE95B44227E74F1BAB258 /* RouteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51B72C6129CFB8FABBC86B0 /* RouteService.swift */; };
+		CECE81CE10C875B527A01EEB /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB305631F2687927CB0B14A9 /* LargeWidgetView.swift */; };
+		D80F469E76E125FE6282286A /* FlightData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509D18D6F550B835D979E505 /* FlightData.swift */; };
+		F4C8ADB328AC9DA5C8A66F88 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468FD66B92A4B5BED14B6B37 /* Constants.swift */; };
+		F5BC5A3EAAB44CC44C7EA2B3 /* PlaneTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497307B24BC78BCB91C7863A /* PlaneTrackerApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		67EEB3FE101A61C28E66FC87 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A09784096D6EB70D0EB3458B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A431FB6482CB4028C6F17651;
+			remoteInfo = PlaneTrackerWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5FA110FF4CDD5B21E413391A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6769898DC056E37F05CD51C1 /* PlaneTrackerWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0CE69E844951A748EBE023E6 /* PlaneTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlaneTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		164FADA95C19A300EDBC66FF /* PlaneTrackerWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PlaneTrackerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1C9DEB0510251125516A3D29 /* WidgetEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetEntry.swift; sourceTree = "<group>"; };
+		3A7FBEE6FAF354531596CC1B /* GeoMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoMath.swift; sourceTree = "<group>"; };
+		41B0CED426ECB63E0E2F0323 /* ArcShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcShape.swift; sourceTree = "<group>"; };
+		468FD66B92A4B5BED14B6B37 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		497307B24BC78BCB91C7863A /* PlaneTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaneTrackerApp.swift; sourceTree = "<group>"; };
+		4A73F64609F0F003C62C39D8 /* WMOCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WMOCodes.swift; sourceTree = "<group>"; };
+		4B80F06DE2F9BC28DBF9356C /* WeatherData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherData.swift; sourceTree = "<group>"; };
+		504A8E11C570EC437F4D3397 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		509D18D6F550B835D979E505 /* FlightData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightData.swift; sourceTree = "<group>"; };
+		567EBAC2E313B6EECD13AAEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5D59EE69F362AECC398BA7B8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		6355DA8511C97151163E16E1 /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
+		64C20908A8497087E1E5EFBD /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
+		77D99DB73F19189D89FD7F59 /* PlaneTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PlaneTracker.entitlements; sourceTree = "<group>"; };
+		874D4BF9484203C43FF73A7A /* PlaneTrackerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaneTrackerWidget.swift; sourceTree = "<group>"; };
+		95C4A41A5ADE5DCEDE87384C /* WidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntent.swift; sourceTree = "<group>"; };
+		9DA7CCBC871C6A3AE6C4A714 /* RouteData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteData.swift; sourceTree = "<group>"; };
+		A335035A98B536913DC98DE1 /* FlapCharacter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapCharacter.swift; sourceTree = "<group>"; };
+		AB305631F2687927CB0B14A9 /* LargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetView.swift; sourceTree = "<group>"; };
+		C34323ABFC1E1273ECE537FC /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
+		E302C509E56785CE30E4211E /* FlightService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightService.swift; sourceTree = "<group>"; };
+		E3F4B9A6844A2CDA12F6715A /* PlaneTrackerWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PlaneTrackerWidget.entitlements; sourceTree = "<group>"; };
+		E51B72C6129CFB8FABBC86B0 /* RouteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteService.swift; sourceTree = "<group>"; };
+		E978C2F30861D7FA6F0DFDA9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F7CF87D7B280F1D79753DFDF /* PlaneTrackerBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaneTrackerBundle.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		3D1AB0BBEBD97ABDE5D1626E /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				468FD66B92A4B5BED14B6B37 /* Constants.swift */,
+				3A7FBEE6FAF354531596CC1B /* GeoMath.swift */,
+				4A73F64609F0F003C62C39D8 /* WMOCodes.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		5671DA88E305111BE0FCB281 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				41B0CED426ECB63E0E2F0323 /* ArcShape.swift */,
+				A335035A98B536913DC98DE1 /* FlapCharacter.swift */,
+				AB305631F2687927CB0B14A9 /* LargeWidgetView.swift */,
+				64C20908A8497087E1E5EFBD /* MediumWidgetView.swift */,
+				6355DA8511C97151163E16E1 /* SmallWidgetView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		596A7B440033B454EB13F22F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				509D18D6F550B835D979E505 /* FlightData.swift */,
+				9DA7CCBC871C6A3AE6C4A714 /* RouteData.swift */,
+				4B80F06DE2F9BC28DBF9356C /* WeatherData.swift */,
+				1C9DEB0510251125516A3D29 /* WidgetEntry.swift */,
+				95C4A41A5ADE5DCEDE87384C /* WidgetIntent.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		612DAD9FA88C9E2602923AC6 = {
+			isa = PBXGroup;
+			children = (
+				CD8EF8C4C77532EAECFB7A91 /* PlaneTracker */,
+				D6E3B526B2C3F1B61E5B6E29 /* PlaneTrackerWidget */,
+				9F638C5B45BF0CE6C6CA0826 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9F638C5B45BF0CE6C6CA0826 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0CE69E844951A748EBE023E6 /* PlaneTracker.app */,
+				164FADA95C19A300EDBC66FF /* PlaneTrackerWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CD8EF8C4C77532EAECFB7A91 /* PlaneTracker */ = {
+			isa = PBXGroup;
+			children = (
+				567EBAC2E313B6EECD13AAEB /* Assets.xcassets */,
+				5D59EE69F362AECC398BA7B8 /* ContentView.swift */,
+				77D99DB73F19189D89FD7F59 /* PlaneTracker.entitlements */,
+				497307B24BC78BCB91C7863A /* PlaneTrackerApp.swift */,
+			);
+			path = PlaneTracker;
+			sourceTree = "<group>";
+		};
+		D65F781767D169DAB8358242 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E302C509E56785CE30E4211E /* FlightService.swift */,
+				E51B72C6129CFB8FABBC86B0 /* RouteService.swift */,
+				C34323ABFC1E1273ECE537FC /* WeatherService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		D6E3B526B2C3F1B61E5B6E29 /* PlaneTrackerWidget */ = {
+			isa = PBXGroup;
+			children = (
+				504A8E11C570EC437F4D3397 /* Assets.xcassets */,
+				E978C2F30861D7FA6F0DFDA9 /* Info.plist */,
+				F7CF87D7B280F1D79753DFDF /* PlaneTrackerBundle.swift */,
+				E3F4B9A6844A2CDA12F6715A /* PlaneTrackerWidget.entitlements */,
+				874D4BF9484203C43FF73A7A /* PlaneTrackerWidget.swift */,
+				3D1AB0BBEBD97ABDE5D1626E /* Helpers */,
+				596A7B440033B454EB13F22F /* Models */,
+				D65F781767D169DAB8358242 /* Services */,
+				5671DA88E305111BE0FCB281 /* Views */,
+			);
+			path = PlaneTrackerWidget;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		547BB65F0D6A8B1E965B8C47 /* PlaneTracker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 165C4D974F07DCE30A3F668C /* Build configuration list for PBXNativeTarget "PlaneTracker" */;
+			buildPhases = (
+				28AFE54E10E8775439F11391 /* Sources */,
+				1565EC80AB2ECDA71F493D1D /* Resources */,
+				5FA110FF4CDD5B21E413391A /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C04EFE97345683525F3C11DC /* PBXTargetDependency */,
+			);
+			name = PlaneTracker;
+			packageProductDependencies = (
+			);
+			productName = PlaneTracker;
+			productReference = 0CE69E844951A748EBE023E6 /* PlaneTracker.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A431FB6482CB4028C6F17651 /* PlaneTrackerWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0C7AA9610E37108E36A585D7 /* Build configuration list for PBXNativeTarget "PlaneTrackerWidgetExtension" */;
+			buildPhases = (
+				02CE2D963254F275F27139C1 /* Sources */,
+				78FC6BD555740B7A119FB72E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PlaneTrackerWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = PlaneTrackerWidgetExtension;
+			productReference = 164FADA95C19A300EDBC66FF /* PlaneTrackerWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A09784096D6EB70D0EB3458B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					547BB65F0D6A8B1E965B8C47 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					A431FB6482CB4028C6F17651 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = C9DA49D32FC6F044DA76A7AE /* Build configuration list for PBXProject "PlaneTracker" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 612DAD9FA88C9E2602923AC6;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9F638C5B45BF0CE6C6CA0826 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				547BB65F0D6A8B1E965B8C47 /* PlaneTracker */,
+				A431FB6482CB4028C6F17651 /* PlaneTrackerWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1565EC80AB2ECDA71F493D1D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				02545F5CCEAF5A6E73B8670D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78FC6BD555740B7A119FB72E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86C13254B512D7E78C71DDD2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		02CE2D963254F275F27139C1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				180D444F2BD306008B6BB8B4 /* ArcShape.swift in Sources */,
+				F4C8ADB328AC9DA5C8A66F88 /* Constants.swift in Sources */,
+				7D2B7C6D7636B41F4FBFB4F4 /* FlapCharacter.swift in Sources */,
+				D80F469E76E125FE6282286A /* FlightData.swift in Sources */,
+				A222D3A8A25831383D8C50A0 /* FlightService.swift in Sources */,
+				5C993F0F9102BA09EB3743E4 /* GeoMath.swift in Sources */,
+				CECE81CE10C875B527A01EEB /* LargeWidgetView.swift in Sources */,
+				3F868E3F736AC7C4B17671CE /* MediumWidgetView.swift in Sources */,
+				9888B1501BCE57192A59584F /* PlaneTrackerBundle.swift in Sources */,
+				0BA9E9ACE142EDFFAD10E003 /* PlaneTrackerWidget.swift in Sources */,
+				32A3701DEB713AD9BCCAFB9F /* RouteData.swift in Sources */,
+				B67EE95B44227E74F1BAB258 /* RouteService.swift in Sources */,
+				6F47CDF70D13A2F7F01BAD23 /* SmallWidgetView.swift in Sources */,
+				A7E6AE5790F2E8E3FF30C0F3 /* WMOCodes.swift in Sources */,
+				1B93252BB6F6280D253FF691 /* WeatherData.swift in Sources */,
+				7F1E04EA59FCEDB632808F35 /* WeatherService.swift in Sources */,
+				A34414A23CCE83EBEFD716B4 /* WidgetEntry.swift in Sources */,
+				122C883D992E2B65F1FBFD08 /* WidgetIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		28AFE54E10E8775439F11391 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90CBD6D858C87FD080B3E032 /* ContentView.swift in Sources */,
+				F5BC5A3EAAB44CC44C7EA2B3 /* PlaneTrackerApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C04EFE97345683525F3C11DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A431FB6482CB4028C6F17651 /* PlaneTrackerWidgetExtension */;
+			targetProxy = 67EEB3FE101A61C28E66FC87 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3134CAB709993AE60CE7C6C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		35DDE186222A78ADD381BCF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PlaneTracker/PlaneTracker.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Plane Tracker";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.planetracker.PlaneTracker;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		4BECB479A6D85637E7CD3E7B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PlaneTracker/PlaneTracker.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Plane Tracker";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.planetracker.PlaneTracker;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		611C2BD7A42B5180DDA9373A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		96249A97A0CA7ED44D628182 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PlaneTrackerWidget/PlaneTrackerWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = PlaneTrackerWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.planetracker.PlaneTracker.widget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		F2CD678FB8BC89A71DFE263C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PlaneTrackerWidget/PlaneTrackerWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = PlaneTrackerWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.planetracker.PlaneTracker.widget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0C7AA9610E37108E36A585D7 /* Build configuration list for PBXNativeTarget "PlaneTrackerWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2CD678FB8BC89A71DFE263C /* Debug */,
+				96249A97A0CA7ED44D628182 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		165C4D974F07DCE30A3F668C /* Build configuration list for PBXNativeTarget "PlaneTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4BECB479A6D85637E7CD3E7B /* Debug */,
+				35DDE186222A78ADD381BCF2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C9DA49D32FC6F044DA76A7AE /* Build configuration list for PBXProject "PlaneTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3134CAB709993AE60CE7C6C9 /* Debug */,
+				611C2BD7A42B5180DDA9373A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A09784096D6EB70D0EB3458B /* Project object */;
+}
