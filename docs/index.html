@@ -16,7 +16,7 @@
             --flap-bg:       #1a1a1e;
             --flap-split:    rgba(0,0,0,0.5);
             --text-primary:  #e8e0d0;
-            --text-secondary:#6a6a70;
+            --text-secondary:#9a9aa4;
             --text-accent:   #d4a847;
             --border:        #1a1a20;
             --border-strong: #252530;
@@ -128,7 +128,7 @@
             width: 52%; display: flex; flex-direction: column;
             justify-content: center; padding: 8px 14px; gap: 6px;
         }
-        #forecast-label { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; }
+        #forecast-label { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; text-align: center; }
         #forecast-grid  { display: flex; gap: 6px; justify-content: space-around; }
         .fc-day  { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
         .fc-name { font-size: 11px; color: var(--text-accent); letter-spacing: 1px; }
@@ -165,10 +165,9 @@
         #airline-logo {
             width: 52px; height: 52px;
             object-fit: contain; flex-shrink: 0;
-            border-radius: 3px;
-            background: rgba(255,255,255,0.10);
-            padding: 4px;
-            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            background: #fff;
+            padding: 6px;
         }
         #airline-logo.no-logo { display: none; }
 
@@ -340,7 +339,7 @@
         @media (max-width: 639px) {
             /* Flight mode: airline band */
             #fl-airline { padding: 10px 14px; gap: 10px; }
-            #airline-logo { width: 48px; height: 48px; }
+            #airline-logo { width: 52px; height: 52px; }
             #airline-name { font-size: 22px; }
             #fl-callsign  { font-size: 15px; }
 
@@ -419,7 +418,7 @@
                 border-right: 1px solid var(--border);
                 padding: 6px 14px;
             }
-            #airline-logo { width: 36px; height: 36px; }
+            #airline-logo { width: 40px; height: 40px; }
             #airline-name { font-size: 18px; }
             #fl-callsign  { font-size: 13px; }
             #fl-route-section {
@@ -464,7 +463,7 @@
                 border-right: 1px solid var(--border);
                 padding: 24px 40px;
             }
-            #fl-airline #airline-logo { width: 72px; height: 72px; }
+            #fl-airline #airline-logo { width: 80px; height: 80px; }
             #fl-airline #airline-name { font-size: clamp(28px, 3vw, 38px); }
             #fl-airline #fl-callsign  { font-size: clamp(20px, 2vw, 26px); }
             #fl-airline #fl-type      { font-size: clamp(16px, 1.8vw, 20px); }
@@ -868,7 +867,9 @@ function fmtTime(d) {
 function fmtDate(d) {
     return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
 }
-function fmtDayShort(iso) {
+function fmtDayShort(iso, index) {
+    if (index === 0) return 'TODAY';
+    if (index === 1) return 'TOMORROW';
     return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { weekday:'short' }).toUpperCase();
 }
 
@@ -1224,7 +1225,7 @@ function renderFlight(f, idx, total, animate = false) {
     // Airline logo + name
     const logoEl = document.getElementById('airline-logo');
     if (route?.airlineIata) {
-        logoEl.src = `https://pics.avs.io/80/80/${route.airlineIata}.png`;
+        logoEl.src = `https://pics.avs.io/200/200/${route.airlineIata}.png`;
         logoEl.classList.remove('no-logo');
     } else {
         logoEl.classList.add('no-logo');
@@ -1318,7 +1319,7 @@ function renderWeather(data) {
         const el = document.createElement('div');
         el.className = 'fc-day';
         el.innerHTML = `
-            <span class="fc-name">${fmtDayShort(d.time[i])}</span>
+            <span class="fc-name">${fmtDayShort(d.time[i], i)}</span>
             <span class="fc-icon">${WMO[d.weather_code[i]] || '🌡️'}</span>
             <div class="fc-temps">
                 <span class="fc-max">${toTemp(d.temperature_2m_max[i])}°</span>
