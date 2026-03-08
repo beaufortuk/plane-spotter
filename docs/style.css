@@ -1,0 +1,620 @@
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:            #0c0c10;
+            --flap-bg:       #1a1a1e;
+            --flap-split:    rgba(0,0,0,0.5);
+            --text-primary:  #e8e0d0;
+            --text-secondary:#9a9aa4;
+            --text-accent:   #d4a847;
+            --border:        #1a1a20;
+            --border-strong: #252530;
+            --dim:           #3a3a44;
+            --status-ok:     #5a9a60;
+            --status-err:    #c05050;
+            --vs-up:         #7ab87a;
+            --vs-down:       #b87a7a;
+            /* Spacing tokens */
+            --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+            --sp-4: 16px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        /* Scanline texture */
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 3px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ── Loading ─────────────────────────────────────────────── */
+        #loading {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100dvh; gap: 14px; padding: 24px;
+        }
+        #loading .logo { font-size: 20px; color: var(--text-accent); letter-spacing: 4px; }
+        #loading .msg  { font-size: 13px; color: var(--text-secondary); }
+        #loading .hint { font-size: 11px; color: var(--text-secondary); max-width: 300px; text-align: center; line-height: 1.6; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .blink { animation: blink 1s step-end infinite; }
+
+        /* ── Manual location form ────────────────────────────────── */
+        #loc-form {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 10px;
+            width: 100%; max-width: 300px;
+        }
+        #loc-form .lf-title { font-size: 13px; color: var(--text-accent); letter-spacing: 1px; text-align: center; }
+        #loc-form .lf-sub   { font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.6; }
+        #loc-form .lf-row   { display: flex; align-items: center; gap: 8px; width: 100%; }
+        #loc-form label     { font-size: 11px; color: var(--text-secondary); width: 28px; flex-shrink: 0; }
+        #loc-form input[type=text] {
+            flex: 1; background: #0e0e1a; border: 1px solid #2a2a40;
+            color: var(--text-primary); font-family: 'Courier New', Courier, monospace;
+            font-size: 14px; padding: 6px 10px; border-radius: 3px;
+            outline: none; -webkit-appearance: none;
+        }
+        #loc-form input[type=text]:focus { border-color: var(--text-accent); }
+#loc-form .lf-err { font-size: 11px; color: var(--status-err); min-height: 14px; }
+        #loc-form button {
+            background: var(--text-accent); color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px; font-weight: bold; letter-spacing: 2px;
+            border: none; padding: 10px 28px; border-radius: 3px;
+            cursor: pointer; margin-top: 4px;
+        }
+
+        /* ── App shell ───────────────────────────────────────────── */
+        #app { display: flex; flex-direction: column; height: 100dvh; width: 100vw; }
+
+        /* ── Header ─────────────────────────────────────────────── */
+        #header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: var(--sp-2) var(--sp-4);
+            border-bottom: 1px solid var(--border-strong);
+            flex-shrink: 0;
+        }
+        #hd-logo  { font-size: 11px; color: var(--text-secondary); letter-spacing: 5px; font-weight: normal; }
+        #hd-right { display: flex; align-items: baseline; gap: 8px; }
+        #hd-time  { font-size: 17px; color: var(--text-accent); font-weight: bold; letter-spacing: 1px; }
+        #hd-date  { font-size: 11px; color: var(--text-secondary); }
+
+        /* ── Main ────────────────────────────────────────────────── */
+        #main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+        /* ── Clock mode ──────────────────────────────────────────── */
+        #clock-mode { display: flex; width: 100%; }
+        #clock-left {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 8px 20px; border-right: 1px solid var(--border); gap: 8px;
+        }
+        #big-time     { font-size: clamp(32px, 10vw, 58px); color: var(--text-accent); font-weight: bold; letter-spacing: 2px; }
+        #weather-line { font-size: 13px; color: var(--text-secondary); }
+        #temp-val     { color: var(--text-primary); }
+        #unit-toggle {
+            background: none; border: 1px solid var(--dim);
+            color: var(--text-secondary); font-family: 'Courier New', Courier, monospace;
+            font-size: 11px; letter-spacing: 2px; padding: 3px 10px;
+            border-radius: 3px; cursor: pointer;
+        }
+        #unit-toggle:hover { border-color: var(--text-accent); color: var(--text-accent); }
+        #wind-val     { }
+        #sun-line     { font-size: 12px; color: var(--text-secondary); letter-spacing: 1px; }
+        #sun-line .sun-arrow { color: var(--text-accent); }
+        #no-flights   { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; margin-top: 6px; }
+
+        /* Golden hour glow on clock screen */
+        #clock-mode.golden-hour { box-shadow: inset 0 0 80px rgba(212, 168, 71, 0.08); }
+        #clock-mode.golden-hour #clock-left {
+            border-image: linear-gradient(180deg, rgba(212,168,71,0.25) 0%, rgba(212,168,71,0.05) 100%) 1;
+        }
+        #clock-mode.golden-hour #big-time {
+            text-shadow: 0 0 20px rgba(212,168,71,0.3);
+        }
+
+        /* Flight stats section (clock screen) */
+        #flight-stats {
+            margin-top: 12px; padding-top: 10px;
+            border-top: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 3px;
+            text-align: center;
+            font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+        }
+        #flight-stats.fs-empty { display: none; }
+        #fs-counts {
+            font-size: 11px; color: var(--text-secondary);
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+        #fs-counts .fs-sep { margin: 0 6px; color: var(--dim); }
+        #fs-airline {
+            font-size: 10px; color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+        #fs-airline:empty { display: none; }
+        #fs-airline .fs-airline-code { color: var(--text-accent); }
+        #fs-last {
+            font-size: 10px; color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+        #fs-last:empty { display: none; }
+        #fs-last .fs-callsign { color: var(--text-primary); }
+        #fs-last .fs-route    { color: var(--text-accent); }
+        #fs-last .fs-ago      { color: var(--dim); }
+
+        #clock-right  {
+            width: 52%; display: flex; flex-direction: column;
+            justify-content: center; padding: 8px 14px; gap: 6px;
+        }
+        #forecast-label { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; text-align: center; }
+        #forecast-grid  { display: flex; gap: 6px; justify-content: space-around; }
+        .fc-day  { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+        .fc-name { font-size: 11px; color: var(--text-accent); letter-spacing: 1px; }
+        .fc-icon { font-size: 18px; }
+        .fc-temps { font-size: 11px; }
+        .fc-max  { color: var(--text-primary); }
+        .fc-min  { color: var(--text-secondary); }
+
+        /* ── Flight mode ─────────────────────────────────────────── */
+        #flight-mode {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow: hidden;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+
+        /* ── Airline band ────────────────────────────────────────── */
+        #fl-airline {
+            display: flex; align-items: center; gap: 14px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            position: relative;
+        }
+        /* Left accent strip */
+        #fl-airline::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: var(--text-accent);
+            opacity: 0.9;
+        }
+        #airline-logo {
+            width: 52px; height: 52px;
+            object-fit: contain; flex-shrink: 0;
+            border-radius: 6px;
+            background: #fff;
+            padding: 6px;
+        }
+        #airline-logo.no-logo { display: none; }
+
+        #fl-airline-text { flex: 1; overflow: hidden; min-width: 0; }
+
+        #airline-name-wrap { overflow: hidden; white-space: nowrap; }
+        #airline-name {
+            display: inline-block;
+            font-size: 23px; font-weight: bold;
+            color: var(--text-primary); letter-spacing: 0.5px;
+        }
+        @keyframes marquee {
+            0%, 15%  { transform: translateX(0); }
+            85%, 100% { transform: translateX(var(--marquee-dist, -50%)); }
+        }
+        #airline-name.scrolling { animation: marquee 8s ease-in-out infinite alternate; }
+
+        #fl-sub { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+        #fl-callsign { font-size: 17px; }
+        .cs-alpha   { color: var(--text-primary); letter-spacing: 1px; }
+        .cs-numeric { color: var(--text-primary); letter-spacing: 1px; }
+        #fl-type    { font-size: 14px; color: var(--text-secondary); letter-spacing: 0.5px; }
+        #fl-country { font-size: 12px; color: var(--text-secondary); }
+        #fl-page    { font-size: 12px; color: var(--text-secondary); margin-left: auto; padding-right: 2px; }
+
+        /* ── Route section ───────────────────────────────────────── */
+        #fl-route-section {
+            padding: 10px 16px 8px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle warm radial from corners */
+        #fl-route-section::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 40% 60% at 10% 80%, rgba(212,168,71,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 60% at 90% 80%, rgba(212,168,71,0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        #fl-airports {
+            display: flex; justify-content: space-between;
+            align-items: flex-end; margin-bottom: 4px;
+            position: relative; z-index: 1;
+        }
+        .ap-block { display: flex; flex-direction: column; gap: 1px; }
+        .ap-block.dest { align-items: flex-end; }
+
+        .ap-iata {
+            font-size: clamp(36px, 10vw, 52px);
+            font-weight: bold; letter-spacing: 4px; line-height: 1;
+        }
+        #ap-origin-iata { color: var(--text-primary); }
+        #ap-dest-iata   { color: var(--text-primary); }
+
+        .ap-city {
+            font-size: 11px; color: var(--text-secondary); letter-spacing: 1.5px;
+            text-transform: uppercase;
+            max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .ap-block.dest .ap-city { text-align: right; }
+
+        /* SVG arc container */
+        #arc-container {
+            position: relative; z-index: 1;
+            height: 64px;
+        }
+        #route-arc {
+            width: 100%; height: 100%;
+            display: block;
+            overflow: visible;
+        }
+
+        /* ── Stats grid ──────────────────────────────────────────── */
+        #fl-stats-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        #stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+            flex: 1;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 10px 14px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        /* Colored accent line at top of each card */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            transition: box-shadow 0.4s ease;
+        }
+        .stat-card::before { background: var(--text-accent); opacity: 0.4; }
+        #sc-vs.vs-up::before   { background: var(--vs-up); opacity: 0.5; }
+        #sc-vs.vs-down::before { background: var(--vs-down); opacity: 0.5; }
+        #sc-vs.vs-lvl::before  { background: var(--dim); opacity: 0.3; }
+
+        /* Subtle warm inner glow */
+        .stat-card { background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(212,168,71,0.04) 0%, transparent 60%), var(--bg); }
+
+        .sc-val-row { display: flex; align-items: baseline; gap: 5px; }
+
+        /* Hero numbers */
+        .sc-val {
+            font-size: clamp(26px, 7.5vw, 40px);
+            font-weight: bold; letter-spacing: 1px; line-height: 1;
+        }
+        .sc-unit { font-size: 11px; color: var(--text-secondary); letter-spacing: 1px; flex-shrink: 0; }
+        .sc-dir  { font-size: 11px; color: var(--text-secondary); margin-left: 2px; }
+
+        /* Small-caps label */
+        .sc-lbl {
+            font-size: 13px; letter-spacing: 3px;
+            color: var(--text-secondary); margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Climb rate card */
+        .sc-vs {
+            font-size: clamp(15px, 4.5vw, 20px);
+            font-weight: bold; letter-spacing: 0.5px; line-height: 1.2;
+        }
+        .sc-vs.up   { color: var(--vs-up); }
+        .sc-vs.down { color: var(--vs-down); }
+        .sc-vs.lvl  { color: var(--text-secondary); }
+        #sc-vs.vs-up   { background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(122,184,122,0.06) 0%, transparent 60%), var(--bg); }
+        #sc-vs.vs-down { background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(184,122,122,0.06) 0%, transparent 60%), var(--bg); }
+
+        .sc-vfpm { font-size: 11px; color: var(--text-secondary); margin-top: 3px; letter-spacing: 0.5px; }
+
+        /* ── Footer ──────────────────────────────────────────────── */
+        #footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--border-strong); flex-shrink: 0;
+        }
+        #ft-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+        #ft-dot    { width: 8px; height: 8px; border-radius: 50%; background: var(--status-ok); flex-shrink: 0; }
+        #ft-count  { font-size: 11px; color: var(--text-secondary); }
+
+        /* ── Entrance animation ──────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeUp 0.3s ease forwards; }
+
+        /* ── Mobile: let route arc fill the space ───────────────── */
+        @media (max-width: 639px) {
+            /* Flight mode: airline band */
+            #fl-airline { padding: 10px 14px; gap: 10px; }
+            #airline-logo { width: 52px; height: 52px; }
+            #airline-name { font-size: 22px; }
+            #fl-callsign  { font-size: 15px; }
+
+            /* Flight mode: route section — shrink to fit, don't hog space */
+            .ap-iata { font-size: clamp(36px, 10vw, 52px); }
+            .ap-city { font-size: 12px; max-width: 42vw; }
+            #fl-route-section {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 0;
+                overflow: hidden;
+                padding: 6px 14px 0;
+                border-bottom: none;
+                justify-content: center;
+                min-height: 0;
+            }
+            #fl-airports { flex-shrink: 0; }
+            #arc-container {
+                flex: 1 1 0;
+                min-height: 40px;
+                max-height: clamp(80px, 14dvh, 160px);
+            }
+
+            /* Flight mode: stats — guaranteed space */
+            #fl-stats-section { flex: 0 0 auto; }
+            #stats-grid {
+                grid-template-rows: 1fr 1fr;
+                background: var(--border);
+                border-top: 1px solid var(--border);
+            }
+            .stat-card {
+                padding: 6px 10px;
+                justify-content: center;
+                min-height: 0;
+            }
+            .sc-val  { font-size: clamp(22px, 7vw, 32px); }
+            .sc-lbl  { margin-top: 1px; font-size: 11px; letter-spacing: 2px; }
+            .sc-vs   { font-size: clamp(13px, 3.5vw, 18px); }
+            .sc-vfpm { font-size: 10px; margin-top: 1px; }
+
+            /* Clock / weather screen — stack vertically on mobile */
+            #clock-mode { flex-direction: column; }
+            #clock-left {
+                flex: 0 1 auto;
+                border-right: none; border-bottom: 1px solid var(--border);
+                padding: 16px 20px; gap: 10px;
+            }
+            #big-time      { font-size: clamp(48px, 14vw, 72px); }
+            #weather-line  { font-size: 16px; }
+            #no-flights    { font-size: 14px; }
+            #unit-toggle   { font-size: 13px; padding: 4px 12px; }
+            #clock-right   { width: 100%; padding: 14px 20px; gap: 8px; }
+            #forecast-label { font-size: 13px; }
+            .fc-name  { font-size: 13px; }
+            .fc-icon  { font-size: 24px; }
+            .fc-temps { font-size: 13px; }
+            #sun-line { font-size: 13px; }
+            #flight-stats { margin-top: 10px; padding-top: 8px; }
+        }
+
+        /* ── Tablet layout (640px+) ──────────────────────────────── */
+        @media (min-width: 640px) {
+            #arc-container { height: 88px; }
+            .ap-iata { font-size: clamp(44px, 7vw, 60px); }
+            .sc-val  { font-size: clamp(30px, 4.5vw, 44px); }
+        }
+
+        /* ── Landscape phone (wide + short) ─────────────────────── */
+        @media (min-width: 640px) and (max-width: 1023px) and (max-height: 500px) {
+            #flight-mode {
+                display: grid;
+                grid-template-columns: 55% 45%;
+                grid-template-rows: auto 1fr;
+                min-height: 0;
+            }
+            #fl-airline {
+                grid-column: 1; grid-row: 1;
+                border-bottom: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+                padding: 6px 14px;
+            }
+            #airline-logo { width: 40px; height: 40px; }
+            #airline-name { font-size: 18px; }
+            #fl-callsign  { font-size: 13px; }
+            #fl-route-section {
+                grid-column: 1; grid-row: 2;
+                border-right: 1px solid var(--border);
+                display: flex; flex-direction: column;
+                justify-content: center;
+                padding: 6px 14px;
+                overflow: hidden; min-height: 0;
+            }
+            .ap-iata { font-size: clamp(32px, 5vw, 48px); }
+            .ap-city { font-size: 10px; }
+            #arc-container { height: clamp(40px, 12dvh, 80px); }
+            #fl-stats-section {
+                grid-column: 2; grid-row: 1 / span 2;
+            }
+            #stats-grid { height: 100%; }
+            .stat-card { padding: 4px 12px; justify-content: center; min-height: 0; }
+            .sc-val  { font-size: clamp(20px, 4vw, 32px); }
+            .sc-lbl  { font-size: 10px; letter-spacing: 2px; }
+            .sc-vs   { font-size: clamp(12px, 3vw, 18px); }
+            .sc-vfpm { font-size: 9px; }
+            /* Clock — side-by-side is fine in landscape */
+            #clock-mode { flex-direction: row; }
+            #clock-left { border-right: 1px solid var(--border); border-bottom: none; }
+            #clock-right { width: 52%; }
+        }
+
+        /* ── Desktop layout (1024px+) ────────────────────────────── */
+        @media (min-width: 1024px) {
+            #flight-mode {
+                display: grid;
+                grid-template-columns: 58% 42%;
+                grid-template-rows: auto 1fr;
+                min-height: 0;
+            }
+            /* Airline: top-left cell */
+            #fl-airline {
+                grid-column: 1;
+                grid-row: 1;
+                border-bottom: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+                padding: 24px 40px;
+            }
+            #fl-airline #airline-logo { width: 80px; height: 80px; }
+            #fl-airline #airline-name { font-size: clamp(28px, 3vw, 38px); }
+            #fl-airline #fl-callsign  { font-size: clamp(20px, 2vw, 26px); }
+            #fl-airline #fl-type      { font-size: clamp(16px, 1.8vw, 20px); }
+            #fl-airline #fl-country   { font-size: 15px; }
+            #fl-airline #fl-page      { font-size: 15px; }
+            /* Route + arc: bottom-left cell */
+            #fl-route-section {
+                grid-column: 1;
+                grid-row: 2;
+                border-bottom: none;
+                border-right: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 24px 40px 20px;
+                overflow: hidden;
+                gap: 0;
+                min-height: 0;
+            }
+            /* Stats: full right column */
+            #fl-stats-section {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+            }
+            #fl-airports {
+                flex: 1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0;
+            }
+            .ap-iata {
+                font-size: clamp(72px, 8vw, 120px);
+                letter-spacing: 8px;
+            }
+            .ap-city {
+                font-size: 14px;
+                letter-spacing: 3px;
+                max-width: 280px;
+            }
+            #arc-container {
+                flex: 0 0 auto;
+                height: clamp(100px, 16dvh, 180px);
+                width: 100%;
+                margin-top: 12px;
+            }
+            #route-arc {
+                width: 100%;
+                height: 100%;
+            }
+            #stats-grid {
+                height: 100%;
+            }
+            .stat-card {
+                padding: 0 32px;
+                justify-content: center;
+                gap: 8px;
+            }
+            .sc-val {
+                font-size: clamp(44px, 4.5vw, 72px);
+            }
+            .sc-lbl {
+                font-size: 14px;
+                letter-spacing: 4px;
+            }
+            .sc-vs {
+                font-size: clamp(22px, 2.4vw, 34px);
+            }
+            .sc-vfpm {
+                font-size: 13px;
+            }
+        }
+
+        /* ── Large desktop (1400px+) ─────────────────────────────── */
+        @media (min-width: 1400px) {
+            .ap-iata { font-size: clamp(90px, 8vw, 140px); }
+            .sc-val  { font-size: clamp(52px, 4vw, 80px); }
+        }
+
+        /* ── Clock mode desktop ──────────────────────────────────── */
+        @media (min-width: 1024px) {
+            #clock-left  { padding: 24px 40px; }
+            #clock-right { width: 46%; padding: 24px 24px; }
+            #big-time    { font-size: clamp(48px, 7vw, 80px); }
+        }
+
+        /* ── Split-flap cells ───────────────────────────────────── */
+        .flap {
+            display: inline-block;
+            background: var(--flap-bg);
+            border-bottom: 2px solid rgba(0,0,0,0.6);
+            padding: 2px 1px;
+            margin: 0 1px;
+            position: relative;
+            line-height: 1;
+            border-radius: 2px;
+        }
+        .flap::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0;
+            top: 50%;
+            height: 1px;
+            background: var(--flap-split);
+            pointer-events: none;
+        }
+        .flap-lg {
+            padding: 4px 3px;
+            margin: 0 2px;
+            border-bottom-width: 3px;
+        }
+
+        @keyframes flapSettle {
+            0%   { transform: scaleY(0.85); }
+            50%  { transform: scaleY(1.05); }
+            100% { transform: scaleY(1); }
+        }
+        .flap.settling { animation: flapSettle 0.1s ease-out; }
+
+        .hidden { display: none !important; }
