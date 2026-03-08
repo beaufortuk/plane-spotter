@@ -29,7 +29,7 @@ Open `docs/index.html` in a browser. It will ask for your location (or you can e
 For a dedicated display (e.g. Raspberry Pi), open it in a full-screen Chromium window:
 
 ```bash
-chromium-browser --kiosk https://beaufortuk.github.io/plane-tracker-rgb-pi/
+chromium-browser --kiosk https://beaufortuk.github.io/plane-spotter/
 ```
 
 ## Acknowledgements
