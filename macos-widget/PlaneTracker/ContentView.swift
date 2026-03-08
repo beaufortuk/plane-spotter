@@ -7,7 +7,7 @@ struct ContentView: View {
                 .font(.system(size: 48))
                 .foregroundColor(Color(red: 0.83, green: 0.66, blue: 0.28))
 
-            Text("Plane Tracker")
+            Text("Plane Spotter")
                 .font(.system(size: 24, weight: .bold, design: .monospaced))
 
             Text("Add the widget to your desktop\nvia the widget gallery.")
@@ -17,7 +17,7 @@ struct ContentView: View {
 
             Divider().frame(width: 200)
 
-            Text("Right-click desktop → Edit Widgets\n→ Search \"Plane Tracker\"")
+            Text("Right-click desktop → Edit Widgets\n→ Search \"Plane Spotter\"")
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

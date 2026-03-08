@@ -394,7 +394,7 @@
 				CODE_SIGN_ENTITLEMENTS = PlaneTracker/PlaneTracker.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Plane Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "Plane Spotter";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -411,7 +411,7 @@
 				CODE_SIGN_ENTITLEMENTS = PlaneTracker/PlaneTracker.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Plane Tracker";
+				INFOPLIST_KEY_CFBundleDisplayName = "Plane Spotter";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

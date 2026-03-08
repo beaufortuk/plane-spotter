@@ -73,8 +73,8 @@ struct PlaneTrackerWidget: Widget {
             PlaneTrackerWidgetView(entry: entry)
                 .containerBackground(PTConstants.panelBg, for: .widget)
         }
-        .configurationDisplayName("Plane Tracker")
-        .description("Track flights overhead with a Solari split-flap display.")
+        .configurationDisplayName("Plane Spotter")
+        .description("Spot flights overhead with a Solari split-flap display.")
         .contentMarginsDisabled()
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

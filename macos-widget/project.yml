@@ -23,7 +23,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.planetracker.PlaneTracker
         GENERATE_INFOPLIST_FILE: "YES"
-        INFOPLIST_KEY_CFBundleDisplayName: "Plane Tracker"
+        INFOPLIST_KEY_CFBundleDisplayName: "Plane Spotter"
         CODE_SIGN_ENTITLEMENTS: PlaneTracker/PlaneTracker.entitlements
     dependencies:
       - target: PlaneTrackerWidgetExtension

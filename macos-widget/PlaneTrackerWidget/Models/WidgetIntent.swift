@@ -14,8 +14,8 @@ enum TemperatureUnit: String, AppEnum {
 }
 
 struct PlaneTrackerIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Plane Tracker"
-    static var description: IntentDescription = "Configure your plane tracker widget."
+    static var title: LocalizedStringResource = "Plane Spotter"
+    static var description: IntentDescription = "Configure your Plane Spotter widget."
 
     @Parameter(title: "Temperature", default: .celsius)
     var units: TemperatureUnit
