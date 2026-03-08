@@ -123,7 +123,49 @@
             border-radius: 3px; cursor: pointer;
         }
         #unit-toggle:hover { border-color: var(--text-accent); color: var(--text-accent); }
+        #wind-val     { }
+        #sun-line     { font-size: 12px; color: var(--text-secondary); letter-spacing: 1px; }
+        #sun-line .sun-arrow { color: var(--text-accent); }
         #no-flights   { font-size: 11px; color: var(--text-secondary); letter-spacing: 3px; margin-top: 6px; }
+
+        /* Golden hour glow on clock screen */
+        #clock-mode.golden-hour { box-shadow: inset 0 0 80px rgba(212, 168, 71, 0.08); }
+        #clock-mode.golden-hour #clock-left {
+            border-image: linear-gradient(180deg, rgba(212,168,71,0.25) 0%, rgba(212,168,71,0.05) 100%) 1;
+        }
+        #clock-mode.golden-hour #big-time {
+            text-shadow: 0 0 20px rgba(212,168,71,0.3);
+        }
+
+        /* Flight stats section (clock screen) */
+        #flight-stats {
+            margin-top: 12px; padding-top: 10px;
+            border-top: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 3px;
+            text-align: center;
+            font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+        }
+        #flight-stats.fs-empty { display: none; }
+        #fs-counts {
+            font-size: 11px; color: var(--text-secondary);
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+        #fs-counts .fs-sep { margin: 0 6px; color: var(--dim); }
+        #fs-airline {
+            font-size: 10px; color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+        #fs-airline:empty { display: none; }
+        #fs-airline .fs-airline-code { color: var(--text-accent); }
+        #fs-last {
+            font-size: 10px; color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+        #fs-last:empty { display: none; }
+        #fs-last .fs-callsign { color: var(--text-primary); }
+        #fs-last .fs-route    { color: var(--text-accent); }
+        #fs-last .fs-ago      { color: var(--dim); }
+
         #clock-right  {
             width: 52%; display: flex; flex-direction: column;
             justify-content: center; padding: 8px 14px; gap: 6px;
@@ -395,6 +437,8 @@
             .fc-name  { font-size: 13px; }
             .fc-icon  { font-size: 24px; }
             .fc-temps { font-size: 13px; }
+            #sun-line { font-size: 13px; }
+            #flight-stats { margin-top: 10px; padding-top: 8px; }
         }
 
         /* ── Tablet layout (640px+) ──────────────────────────────── */
@@ -637,12 +681,23 @@
                     <span id="temp-val">--</span>
                     <span id="hum-val"> &middot; --%</span>
                     <span id="pressure-val"></span>
+                    <span id="wind-val"></span>
                 </div>
+                <div id="sun-line"></div>
                 <div id="no-flights">NO FLIGHTS OVERHEAD</div>
             </div>
             <div id="clock-right">
                 <div id="forecast-label">3&#8209;DAY FORECAST</div>
                 <div id="forecast-grid"></div>
+                <div id="flight-stats">
+                    <div id="fs-counts">
+                        <span id="fs-today"></span>
+                        <span class="fs-sep">&middot;</span>
+                        <span id="fs-week"></span>
+                    </div>
+                    <div id="fs-airline"></div>
+                    <div id="fs-last"></div>
+                </div>
             </div>
         </div>
 
@@ -775,30 +830,200 @@ let cycleTimer = null;
 const routeCache    = new Map();
 const aircraftCache = new Map();
 
+// ─── Persistent flight log (localStorage) ────────────────────────────────────
+const LOG_KEY  = 'ps-log';
+const LOG_MAX  = 200;
+const DEDUP_MS = 3600_000; // 1 hour — don't re-log same callsign within this window
+
+function getFlightLog() {
+    try { return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }
+    catch { return []; }
+}
+
+function saveFlightLog(log) {
+    try {
+        while (log.length > LOG_MAX) log.shift(); // FIFO trim
+        const json = JSON.stringify(log);
+        if (json.length > 20_480) { // ~20 KB cap
+            while (log.length > 0 && JSON.stringify(log).length > 20_480) log.shift();
+        }
+        localStorage.setItem(LOG_KEY, JSON.stringify(log));
+    } catch (e) { console.warn('Flight log save failed:', e); }
+}
+
+function logFlight(flight, route) {
+    if (!route || (!route.origin && !route.dest)) return; // need route data
+    const cs = flight.callsign;
+    if (!cs) return;
+
+    const log = getFlightLog();
+    const now = Date.now();
+
+    // Dedup: skip if same callsign logged within 1 hour
+    const recent = log.findLast(e => e.callsign === cs);
+    if (recent && (now - new Date(recent.time).getTime()) < DEDUP_MS) return;
+
+    log.push({
+        callsign: cs,
+        airline:  route.airlineIata || route.airlineName || '',
+        origin:   route.origin || '',
+        dest:     route.dest || '',
+        alt:      flight.altFt || 0,
+        time:     new Date().toISOString(),
+    });
+    saveFlightLog(log);
+}
+
+function renderFlightStats() {
+    const statsEl = document.getElementById('flight-stats');
+    if (!statsEl) return;
+    const log = getFlightLog();
+    if (!log.length) { statsEl.classList.add('fs-empty'); return; }
+    statsEl.classList.remove('fs-empty');
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const weekStart  = todayStart - 6 * 86400_000; // last 7 days including today
+
+    let todayCount = 0, weekCount = 0;
+    const airlineCounts = {};
+
+    for (const e of log) {
+        const t = new Date(e.time).getTime();
+        if (t >= todayStart) todayCount++;
+        if (t >= weekStart)  weekCount++;
+        if (e.airline) airlineCounts[e.airline] = (airlineCounts[e.airline] || 0) + 1;
+    }
+
+    // Today / week counts
+    document.getElementById('fs-today').textContent = `Today: ${todayCount}`;
+    document.getElementById('fs-week').textContent  = `Week: ${weekCount}`;
+
+    // Most seen airline
+    const airlineEl = document.getElementById('fs-airline');
+    const top = Object.entries(airlineCounts).sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1] > 1) {
+        airlineEl.innerHTML = `Top: <span class="fs-airline-code">${top[0]}</span> \u00b7 ${top[1]} flights`;
+    } else {
+        airlineEl.textContent = '';
+    }
+
+    // Last spotted flight
+    const lastEl = document.getElementById('fs-last');
+    const last = log[log.length - 1];
+    if (last) {
+        const ago = relativeTime(new Date(last.time));
+        const routeStr = (last.origin && last.dest)
+            ? `${last.origin}\u2192${last.dest}` : (last.origin || last.dest || '');
+        lastEl.innerHTML =
+            `Last: <span class="fs-callsign">${last.callsign}</span>` +
+            (routeStr ? ` <span class="fs-route">${routeStr}</span>` : '') +
+            ` <span class="fs-ago">\u00b7 ${ago}</span>`;
+    } else {
+        lastEl.textContent = '';
+    }
+}
+
+function relativeTime(date) {
+    const s = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+    if (s < 60)    return 'just now';
+    if (s < 3600)  return `${Math.floor(s / 60)} min ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    return `${Math.floor(s / 86400)}d ago`;
+}
+
 // ─── ICAO airline prefix → fallback airline info ──────────────────────────────
+// ~200 entries: ICAO 3-letter code → 'Airline Name:IATA 2-letter code'
 const ICAO_AIRLINES = {
-    AAL:'American Airlines:AA', AAR:'Asiana Airlines:OZ', ACA:'Air Canada:AC',
-    AFR:'Air France:AF', AIC:'Air India:AI', AMX:'Aeromexico:AM',
-    ANA:'All Nippon Airways:NH', ASA:'Alaska Airlines:AS', AUA:'Austrian:OS',
-    AZA:'ITA Airways:AZ', BAW:'British Airways:BA', BEE:'Flybe:BE',
-    BEL:'Brussels Airlines:SN', BWA:'Caribbean Airlines:BW', CCA:'Air China:CA',
-    CES:'China Eastern:MU', CLH:'Lufthansa CityLine:CL', CPA:'Cathay Pacific:CX',
-    CSN:'China Southern:CZ', DAL:'Delta Air Lines:DL', DLH:'Lufthansa:LH',
-    EIN:'Aer Lingus:EI', ETD:'Etihad Airways:EY', ETH:'Ethiopian Airlines:ET',
-    EVA:'EVA Air:BR', EWG:'Eurowings:EW', EZS:'easyJet Switzerland:DS',
-    EZY:'easyJet:U2', FIN:'Finnair:AY', GIA:'Garuda Indonesia:GA',
-    IBE:'Iberia:IB', IBK:'Norwegian Air Int:D8', ICE:'Icelandair:FI',
-    JAL:'Japan Airlines:JL', JBU:'JetBlue:B6', KAL:'Korean Air:KE',
-    KLM:'KLM:KL', LNI:'Lion Air:JT', LOT:'LOT Polish:LO',
-    MAH:'Malév:MA', MAS:'Malaysia Airlines:MH', NAX:'Norwegian:DY',
-    NKS:'Spirit Airlines:NK', QFA:'Qantas:QF', QTR:'Qatar Airways:QR',
-    RAM:'Royal Air Maroc:AT', RYR:'Ryanair:FR', SAS:'SAS:SK',
-    SAW:'S7 Airlines:S7', SIA:'Singapore Airlines:SQ', SKW:'SkyWest:OO',
-    SWA:'Southwest Airlines:WN', SWR:'Swiss:LX', TAP:'TAP Air Portugal:TP',
-    THA:'Thai Airways:TG', THY:'Turkish Airlines:TK', TOM:'TUI Airways:BY',
-    UAE:'Emirates:EK', UAL:'United Airlines:UA', UPS:'UPS Airlines:5X',
-    VIR:'Virgin Atlantic:VS', VOE:'Volotea:V7', VLG:'Vueling:VY',
+    // ── North America ────────────────────────────────────────────────────────
+    AAL:'American Airlines:AA', AAY:'Allegiant Air:G4', ACA:'Air Canada:AC',
+    AMX:'Aeromexico:AM', ASA:'Alaska Airlines:AS', ASH:'Mesa Airlines:YV',
+    DAL:'Delta Air Lines:DL', EDV:'Endeavor Air:9E', ENY:'Envoy Air:MQ',
+    FFT:'Frontier Airlines:F9', GJS:'GoJet Airlines:G7',
+    HAL:'Hawaiian Airlines:HA', JBU:'JetBlue:B6', JIA:'PSA Airlines:OH',
+    NKS:'Spirit Airlines:NK', OPT:'Breeze Airways:MX', PDT:'Piedmont Airlines:PT',
+    POE:'Porter Airlines:PD', QXE:'Horizon Air:QX', RPA:'Republic Airways:YX',
+    SCX:'Sun Country Airlines:SY', SKW:'SkyWest Airlines:OO',
+    SWA:'Southwest Airlines:WN', UAL:'United Airlines:UA',
+    WJA:'WestJet:WS', WEN:'WestJet Encore:WR',
+
+    // ── Latin America & Caribbean ────────────────────────────────────────────
+    ARG:'Aerolineas Argentinas:AR', AVA:'Avianca:AV', AZU:'Azul:AD',
+    BWA:'Caribbean Airlines:BW', CMP:'Copa Airlines:CM', GLO:'GOL:G3',
+    LTM:'LATAM Airlines:LA', TAM:'LATAM Brasil:JJ', VCV:'Viva Aerobus:VB',
+    VOI:'Volaris:Y4',
+
+    // ── UK & Ireland ─────────────────────────────────────────────────────────
+    BAW:'British Airways:BA', BEE:'Flybe:BE', EIN:'Aer Lingus:EI',
+    EXS:'Jet2:LS', EZY:'easyJet:U2', EZS:'easyJet Switzerland:DS',
+    LOG:'Loganair:LM', TOM:'TUI Airways:BY', VIR:'Virgin Atlantic:VS',
+
+    // ── Western Europe ───────────────────────────────────────────────────────
+    AFR:'Air France:AF', AZA:'ITA Airways:AZ', BEL:'Brussels Airlines:SN',
+    CLH:'Lufthansa CityLine:CL', DLH:'Lufthansa:LH', EWG:'Eurowings:EW',
+    HOP:'HOP!:A5', IBE:'Iberia:IB', IBK:'Norwegian Air Int:D8',
+    KLM:'KLM:KL', LDA:'Lauda Europe:OE', LGL:'Luxair:LG',
+    NAX:'Norwegian:DY', RYR:'Ryanair:FR', SWR:'Swiss:LX',
+    TAP:'TAP Air Portugal:TP', TVF:'Transavia France:TO',
+    TRA:'Transavia:HV', VLG:'Vueling:VY', VOE:'Volotea:V7',
     WZZ:'Wizz Air:W6',
+
+    // ── Scandinavia & Baltics ────────────────────────────────────────────────
+    BTI:'Air Baltic:BT', FIN:'Finnair:AY', ICE:'Icelandair:FI',
+    SAS:'SAS:SK', WIF:'Wideroe:WF',
+
+    // ── Central & Eastern Europe ─────────────────────────────────────────────
+    AUA:'Austrian:OS', AEE:'Aegean Airlines:A3', CSA:'Czech Airlines:OK',
+    LOT:'LOT Polish:LO', ROT:'TAROM:RO',
+
+    // ── Germany charter/leisure ──────────────────────────────────────────────
+    CFG:'Condor:DE', TUI:'TUIfly:X3',
+
+    // ── Turkey & nearby ──────────────────────────────────────────────────────
+    PGT:'Pegasus Airlines:PC', SXS:'SunExpress:XQ',
+    THY:'Turkish Airlines:TK', CAI:'Corendon Airlines:XC',
+
+    // ── Middle East ──────────────────────────────────────────────────────────
+    ETD:'Etihad Airways:EY', FDB:'flydubai:FZ', FNS:'flynas:XY',
+    GFA:'Gulf Air:GF', MEA:'Middle East Airlines:ME', OMA:'Oman Air:WY',
+    QTR:'Qatar Airways:QR', RJA:'Royal Jordanian:RJ', SVA:'Saudia:SV',
+    UAE:'Emirates:EK',
+
+    // ── Africa ───────────────────────────────────────────────────────────────
+    DAH:'Air Algerie:AH', ETH:'Ethiopian Airlines:ET', KQA:'Kenya Airways:KQ',
+    MSR:'EgyptAir:MS', RAM:'Royal Air Maroc:AT', RWD:'RwandAir:WB',
+    SAA:'South African Airways:SA',
+
+    // ── South Asia ───────────────────────────────────────────────────────────
+    AIC:'Air India:AI', IGO:'IndiGo:6E', LKA:'SriLankan Airlines:UL',
+    SEJ:'SpiceJet:SG',
+
+    // ── East Asia ────────────────────────────────────────────────────────────
+    AAR:'Asiana Airlines:OZ', ANA:'All Nippon Airways:NH', APJ:'Peach Aviation:MM',
+    CCA:'Air China:CA', CES:'China Eastern:MU', CHH:'Hainan Airlines:HU',
+    CPA:'Cathay Pacific:CX', CSN:'China Southern:CZ', EVA:'EVA Air:BR',
+    JAL:'Japan Airlines:JL', JJA:'Jeju Air:7C', JNA:'Jin Air:LJ',
+    KAL:'Korean Air:KE', TWB:"T'way Air:TW",
+
+    // ── Southeast Asia ───────────────────────────────────────────────────────
+    AXM:'AirAsia:AK', CEB:'Cebu Pacific:5J', GIA:'Garuda Indonesia:GA',
+    JSA:'Jetstar Asia:3K', LNI:'Lion Air:JT', MAS:'Malaysia Airlines:MH',
+    SIA:'Singapore Airlines:SQ', SLK:'SilkAir:MI', TGW:'Scoot:TR',
+    THA:'Thai Airways:TG', VJC:'VietJet Air:VJ', HVN:'Vietnam Airlines:VN',
+
+    // ── Oceania ──────────────────────────────────────────────────────────────
+    ANZ:'Air New Zealand:NZ', JST:'Jetstar:JQ', QFA:'Qantas:QF',
+    VOZ:'Virgin Australia:VA',
+
+    // ── Cargo ────────────────────────────────────────────────────────────────
+    ABW:'AirBridgeCargo:RU', ATN:'Air Transport Int:8C', BOX:'AeroLogic:3S',
+    CLX:'Cargolux:CV', CKS:'Kalitta Air:K4', DHL:'DHL Aviation:ES',
+    FDX:'FedEx Express:FX', GTI:'Atlas Air:5Y', MPH:'Martinair:MP',
+    PAC:'Polar Air Cargo:PO', AZG:'Silk Way Airlines:ZP',
+    SQC:'Singapore Airlines Cargo:SQ', UPS:'UPS Airlines:5X',
+
+    // ── Russia & CIS (still occasionally seen on ADS-B) ─────────────────────
+    AFL:'Aeroflot:SU', SAW:'S7 Airlines:S7',
 };
 function airlineFromCallsign(cs) {
     const prefix = cs.replace(/[0-9]/g, '').substring(0, 3).toUpperCase();
@@ -832,6 +1057,11 @@ function haversine(lat1, lon1, lat2, lon2) {
 function toCardinal(deg) {
     return ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg/45) % 8];
 }
+function toCompass16(deg) {
+    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    return dirs[Math.round(((deg % 360) + 360) % 360 / 22.5) % 16];
+}
+const kmhToKnots = v => Math.round(v / 1.852);
 // Route plausibility: is aircraft roughly "on" the claimed route?
 // Uses triangle inequality — sum of distances to endpoints vs direct route distance.
 // If detour ratio > 1.5, route data is likely stale/wrong (airlines reuse callsigns).
@@ -907,12 +1137,23 @@ function fmtDayShort(iso, index) {
 }
 
 // ─── Clock tick ───────────────────────────────────────────────────────────────
+let _lastStatsMin = -1;
 function tickClock() {
     const now = new Date();
     const t = fmtTime(now), d = fmtDate(now);
     document.getElementById('hd-time').textContent  = t;
     document.getElementById('hd-date').textContent  = d;
     document.getElementById('big-time').textContent = t;
+
+    // Refresh flight stats every minute (updates relative times + counts)
+    const curMin = now.getMinutes();
+    if (curMin !== _lastStatsMin) {
+        _lastStatsMin = curMin;
+        renderFlightStats();
+    }
+
+    // Refresh golden hour state
+    updateGoldenHour();
 }
 
 // ─── Animated number counter ──────────────────────────────────────────────────
@@ -1023,8 +1264,8 @@ async function fetchAircraft(icao24) {
 async function fetchWeather() {
     const url = `https://api.open-meteo.com/v1/forecast`
               + `?latitude=${userLat.toFixed(4)}&longitude=${userLon.toFixed(4)}`
-              + `&current=temperature_2m,relative_humidity_2m,weather_code,surface_pressure`
-              + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
+              + `&current=temperature_2m,relative_humidity_2m,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m`
+              + `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset`
               + `&forecast_days=3&timezone=auto`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Open-Meteo ${res.status}`);
@@ -1340,18 +1581,47 @@ function pressFmt(hPa) {
 }
 
 // ─── Render: weather ─────────────────────────────────────────────────────────
+let _sunriseTime = null, _sunsetTime = null;
+
 function renderWeather(data) {
     if (!data) return;
     const cur = data.current;
     document.getElementById('temp-val').textContent = `${toTemp(cur.temperature_2m)}${tempLbl()}`;
     document.getElementById('hum-val').textContent  = ` \u00b7 ${Math.round(cur.relative_humidity_2m)}% RH`;
     document.getElementById('pressure-val').textContent = ` \u00b7 ${pressFmt(cur.surface_pressure)}`;
+
+    // Wind speed + direction
+    const windEl = document.getElementById('wind-val');
+    if (cur.wind_speed_10m != null) {
+        const windKt  = kmhToKnots(cur.wind_speed_10m);
+        const windDir = toCompass16(cur.wind_direction_10m || 0);
+        windEl.textContent = ` \u00b7 ${windKt} kt ${windDir}`;
+    } else {
+        windEl.textContent = '';
+    }
+
+    // Sunrise / sunset (today = index 0)
+    const d = data.daily;
+    const sunEl = document.getElementById('sun-line');
+    if (d.sunrise && d.sunrise[0] && d.sunset && d.sunset[0]) {
+        const srTime = new Date(d.sunrise[0]);
+        const ssTime = new Date(d.sunset[0]);
+        _sunriseTime = srTime; _sunsetTime = ssTime;
+        const srStr = srTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const ssStr = ssTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+        sunEl.innerHTML = `<span class="sun-arrow">\u2191</span> ${srStr}\u2002\u2002<span class="sun-arrow">\u2193</span> ${ssStr}`;
+        updateGoldenHour();
+    } else {
+        sunEl.textContent = '';
+    }
+
     // Update toggle label
     const btn = document.getElementById('unit-toggle');
     if (btn) btn.textContent = UNITS === 'imperial' ? '°F' : '°C';
+
+    // Forecast grid
     const grid = document.getElementById('forecast-grid');
     grid.innerHTML = '';
-    const d = data.daily;
     for (let i = 0; i < Math.min(3, d.time.length); i++) {
         const el = document.createElement('div');
         el.className = 'fc-day';
@@ -1364,6 +1634,22 @@ function renderWeather(data) {
             </div>`;
         grid.appendChild(el);
     }
+
+    // Render flight stats on clock screen
+    renderFlightStats();
+}
+
+// ─── Golden hour check ───────────────────────────────────────────────────────
+function updateGoldenHour() {
+    const clockEl = document.getElementById('clock-mode');
+    if (!_sunriseTime || !_sunsetTime) { clockEl.classList.remove('golden-hour'); return; }
+    const now = Date.now();
+    const srMs = _sunriseTime.getTime();
+    const ssMs = _sunsetTime.getTime();
+    const GOLDEN_MS = 30 * 60 * 1000; // 30 minutes
+    const isGolden = (now >= srMs && now <= srMs + GOLDEN_MS)
+                  || (now >= ssMs - GOLDEN_MS && now <= ssMs);
+    clockEl.classList.toggle('golden-hour', isGolden);
 }
 
 // ─── Display mode switching ───────────────────────────────────────────────────
@@ -1430,6 +1716,9 @@ async function doFlightRefresh() {
             await Promise.all(fetches);
             if (flights.length > 0) renderFlight(flights[fidx], fidx, flights.length);
         }
+        // Log all current flights for stats + last-spotted
+        flights.forEach(f => logFlight(f, routeCache.get(f.callsign)));
+        renderFlightStats();
     } catch (e) {
         const isRateLimit = /429/.test(e.message);
         setStatus(isRateLimit ? 'Rate-limited, backing off\u2026' : `Error: ${e.message}`, false);
@@ -1454,6 +1743,7 @@ async function doWeatherRefresh() {
 function startApp() {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
+    renderFlightStats();
     tickClock();
     setInterval(tickClock, 1000);
     doFlightRefresh();   // schedules its own next refresh
