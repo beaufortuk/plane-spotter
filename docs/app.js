@@ -290,7 +290,6 @@ const MIL_PREFIXES = new Set([
     'NOR',                          // Royal Norwegian Air Force
     'HUF',                          // Hungarian Air Force
     'PLF',                          // Polish Air Force
-    'CFE',                          // Canadian Forces
     'RCH',                          // USAF (Reach callsign)
     'AIO',                          // USAF (Aero Intel)
 ]);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple plane icon in gold -->
+    <path
+        android:fillColor="#D4A847"
+        android:pathData="M54,30 L58,50 L72,56 L58,56 L58,72 L64,78 L54,74 L44,78 L50,72 L50,56 L36,56 L50,50 Z"/>
+</vector>
