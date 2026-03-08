@@ -767,7 +767,7 @@ const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 // character set. A drum stops when it reaches its target character, so
 // positions needing fewer flips settle first (natural stagger).
 const FLAP_ORDER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·?';
-const FLAP_TICK  = 240;  // ms per flip — real Solari boards ~200ms (5 flaps/sec)
+const FLAP_TICK  = 180;  // ms per flip — slightly faster than real Solari (~200ms)
 const FLAP_MIN   = 6;    // minimum flips so every position visibly animates
 
 function flapAnimate(element, targetText, lg = false) {
