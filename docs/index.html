@@ -775,6 +775,39 @@ let cycleTimer = null;
 const routeCache    = new Map();
 const aircraftCache = new Map();
 
+// ─── ICAO airline prefix → fallback airline info ──────────────────────────────
+const ICAO_AIRLINES = {
+    AAL:'American Airlines:AA', AAR:'Asiana Airlines:OZ', ACA:'Air Canada:AC',
+    AFR:'Air France:AF', AIC:'Air India:AI', AMX:'Aeromexico:AM',
+    ANA:'All Nippon Airways:NH', ASA:'Alaska Airlines:AS', AUA:'Austrian:OS',
+    AZA:'ITA Airways:AZ', BAW:'British Airways:BA', BEE:'Flybe:BE',
+    BEL:'Brussels Airlines:SN', BWA:'Caribbean Airlines:BW', CCA:'Air China:CA',
+    CES:'China Eastern:MU', CLH:'Lufthansa CityLine:CL', CPA:'Cathay Pacific:CX',
+    CSN:'China Southern:CZ', DAL:'Delta Air Lines:DL', DLH:'Lufthansa:LH',
+    EIN:'Aer Lingus:EI', ETD:'Etihad Airways:EY', ETH:'Ethiopian Airlines:ET',
+    EVA:'EVA Air:BR', EWG:'Eurowings:EW', EZS:'easyJet Switzerland:DS',
+    EZY:'easyJet:U2', FIN:'Finnair:AY', GIA:'Garuda Indonesia:GA',
+    IBE:'Iberia:IB', IBK:'Norwegian Air Int:D8', ICE:'Icelandair:FI',
+    JAL:'Japan Airlines:JL', JBU:'JetBlue:B6', KAL:'Korean Air:KE',
+    KLM:'KLM:KL', LNI:'Lion Air:JT', LOT:'LOT Polish:LO',
+    MAH:'Malév:MA', MAS:'Malaysia Airlines:MH', NAX:'Norwegian:DY',
+    NKS:'Spirit Airlines:NK', QFA:'Qantas:QF', QTR:'Qatar Airways:QR',
+    RAM:'Royal Air Maroc:AT', RYR:'Ryanair:FR', SAS:'SAS:SK',
+    SAW:'S7 Airlines:S7', SIA:'Singapore Airlines:SQ', SKW:'SkyWest:OO',
+    SWA:'Southwest Airlines:WN', SWR:'Swiss:LX', TAP:'TAP Air Portugal:TP',
+    THA:'Thai Airways:TG', THY:'Turkish Airlines:TK', TOM:'TUI Airways:BY',
+    UAE:'Emirates:EK', UAL:'United Airlines:UA', UPS:'UPS Airlines:5X',
+    VIR:'Virgin Atlantic:VS', VOE:'Volotea:V7', VLG:'Vueling:VY',
+    WZZ:'Wizz Air:W6',
+};
+function airlineFromCallsign(cs) {
+    const prefix = cs.replace(/[0-9]/g, '').substring(0, 3).toUpperCase();
+    const entry = ICAO_AIRLINES[prefix];
+    if (!entry) return null;
+    const [name, iata] = entry.split(':');
+    return { airlineName: name, airlineIata: iata };
+}
+
 // ─── Unit helpers ─────────────────────────────────────────────────────────────
 const mToFt    = m  => Math.round(m * 3.28084);
 const mpsToMph   = v => Math.round(v * 2.23694);
@@ -942,10 +975,11 @@ async function fetchRoute(callsign) {
     if (routeCache.has(callsign)) return routeCache.get(callsign);
     try {
         const res = await fetch(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(callsign)}`);
-        if (!res.ok) { routeCache.set(callsign, null); return null; }
+        const fallback = airlineFromCallsign(callsign) || null;
+        if (!res.ok) { routeCache.set(callsign, fallback); return fallback; }
         const json = await res.json();
         const fr = json?.response?.flightroute;
-        if (!fr) { routeCache.set(callsign, null); return null; }
+        if (!fr) { routeCache.set(callsign, fallback); return fallback; }
         const route = {
             origin:      fr.origin?.iata_code      || fr.origin?.icao_code      || null,
             dest:        fr.destination?.iata_code || fr.destination?.icao_code || null,
@@ -961,8 +995,9 @@ async function fetchRoute(callsign) {
         routeCache.set(callsign, route);
         return route;
     } catch {
-        routeCache.set(callsign, null);
-        return null;
+        const fallback = airlineFromCallsign(callsign) || null;
+        routeCache.set(callsign, fallback);
+        return fallback;
     }
 }
 
@@ -1219,8 +1254,10 @@ function coloredCallsign(cs) {
 // ─── Render: full flight card ────────────────────────────────────────────────
 function renderFlight(f, idx, total, animate = false) {
     let route = routeCache.get(f.callsign);
-    // Discard route if aircraft position doesn't match the claimed airports
-    if (route && !isRoutePlausible(route, f.lat, f.lon)) route = null;
+    // If route is implausible, keep airline info but blank out airports
+    if (route && !isRoutePlausible(route, f.lat, f.lon)) {
+        route = { airlineName: route.airlineName, airlineIata: route.airlineIata };
+    }
 
     // Airline logo + name
     const logoEl = document.getElementById('airline-logo');
