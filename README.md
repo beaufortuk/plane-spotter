@@ -1,6 +1,6 @@
 # Plane Spotter
 
-A split-flap style flight tracker that shows aircraft flying overhead in real time. Designed for a Raspberry Pi connected to a screen, but works in any browser.
+A split-flap style flight tracker that shows aircraft flying overhead in real time. Works in any browser.
 
 Built as a single-file web app (`docs/index.html`) with no dependencies, no build step, and no framework — just vanilla HTML, CSS, and JavaScript.
 
