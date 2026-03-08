@@ -916,10 +916,14 @@ function flapAnimate(element, targetText, lg = false) {
             curIdx[i] = (curIdx[i] + 1) % FLAP_ORDER.length;
             remain[i]--;
             spans[i].textContent = FLAP_ORDER[curIdx[i]];
+            spans[i].classList.remove('ticking');
+            void spans[i].offsetWidth;           // reflow to restart animation
+            spans[i].classList.add('ticking');
 
             if (remain[i] <= 0) {
                 settled[i] = true;
                 spans[i].textContent = chars[i]; // snap to exact target
+                spans[i].classList.remove('ticking');
                 spans[i].classList.add('settling');
                 spans[i].addEventListener('animationend', () => {
                     spans[i].classList.remove('settling');

@@ -617,4 +617,11 @@
         }
         .flap.settling { animation: flapSettle 0.1s ease-out; }
 
+        @keyframes flapTick {
+            0%   { transform: perspective(200px) rotateX(0deg); }
+            40%  { transform: perspective(200px) rotateX(-35deg); }
+            100% { transform: perspective(200px) rotateX(0deg); }
+        }
+        .flap.ticking { animation: flapTick 140ms ease-in-out; }
+
         .hidden { display: none !important; }
