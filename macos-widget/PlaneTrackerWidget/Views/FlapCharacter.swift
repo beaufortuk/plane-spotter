@@ -7,11 +7,11 @@ struct FlapCharacter: View {
 
     var body: some View {
         Text(character)
-            .font(.system(size: isLarge ? 28 : 14, weight: .bold, design: .monospaced))
+            .font(.system(size: isLarge ? 22 : 14, weight: .bold, design: .monospaced))
             .foregroundColor(PTConstants.textPrimary)
             .frame(
-                width: isLarge ? 32 : 16,
-                height: isLarge ? 40 : 22
+                width: isLarge ? 26 : 16,
+                height: isLarge ? 32 : 22
             )
             .background(
                 RoundedRectangle(cornerRadius: 3)

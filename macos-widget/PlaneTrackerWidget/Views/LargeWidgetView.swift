@@ -73,7 +73,7 @@ struct LargeWidgetView: View {
                         .foregroundColor(PTConstants.textDim)
                         .lineLimit(1)
                 }
-                .frame(width: 60)
+                .frame(width: 86)
 
                 // Arc
                 RouteArc(
@@ -90,7 +90,7 @@ struct LargeWidgetView: View {
                         .foregroundColor(PTConstants.textDim)
                         .lineLimit(1)
                 }
-                .frame(width: 60)
+                .frame(width: 86)
             }
             .padding(.horizontal, 8)
 

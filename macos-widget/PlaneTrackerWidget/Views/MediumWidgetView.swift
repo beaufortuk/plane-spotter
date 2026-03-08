@@ -46,16 +46,16 @@ struct MediumWidgetView: View {
                 }
 
                 // Route IATA codes
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     FlapText(text: route?.origin ?? "???", isLarge: true)
 
                     VStack(spacing: 2) {
                         Image(systemName: "airplane")
-                            .font(.system(size: 8))
+                            .font(.system(size: 7))
                             .foregroundColor(PTConstants.goldAccent)
                         Rectangle()
                             .fill(PTConstants.textDim.opacity(0.3))
-                            .frame(width: 20, height: 1)
+                            .frame(width: 16, height: 1)
                     }
 
                     FlapText(text: route?.dest ?? "???", isLarge: true)
@@ -64,14 +64,17 @@ struct MediumWidgetView: View {
                 // City names
                 HStack {
                     Text(route?.originName ?? "")
-                        .font(.system(size: 9))
+                        .font(.system(size: 8))
                         .foregroundColor(PTConstants.textDim)
-                    Spacer()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: 4)
                     Text(route?.destName ?? "")
-                        .font(.system(size: 9))
+                        .font(.system(size: 8))
                         .foregroundColor(PTConstants.textDim)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
-                .frame(maxWidth: 140)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -93,9 +96,9 @@ struct MediumWidgetView: View {
                     PTConstants.levelBlue
                 )
             }
-            .frame(width: 120)
+            .frame(width: 106)
         }
-        .padding(12)
+        .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PTConstants.panelBg)
     }
@@ -111,7 +114,7 @@ struct MediumWidgetView: View {
                     .font(.system(size: 7, weight: .medium))
                     .foregroundColor(PTConstants.textDim)
                 Text(value)
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(PTConstants.textPrimary)
                     .lineLimit(1)
             }
