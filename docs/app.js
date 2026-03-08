@@ -275,6 +275,95 @@ function airlineFromCallsign(cs) {
     return { airlineName: name, airlineIata: iata };
 }
 
+// ─── Unusual traffic classification ──────────────────────────────────────────
+// Returns { tag, tier } or null.  tier = 'rare' | 'uncommon'
+const MIL_PREFIXES = new Set([
+    'RRR',                          // RAF
+    'RFR',                          // French Air Force
+    'GAF',                          // German Air Force
+    'IAM',                          // Italian Air Force
+    'BAF',                          // Belgian Air Force
+    'NAF',                          // Netherlands Air Force
+    'FAF',                          // Finnish Air Force
+    'SVF',                          // Swedish Air Force
+    'DAF',                          // Danish Air Force
+    'NOR',                          // Royal Norwegian Air Force
+    'HUF',                          // Hungarian Air Force
+    'PLF',                          // Polish Air Force
+    'CFE',                          // Canadian Forces
+    'RCH',                          // USAF (Reach callsign)
+    'AIO',                          // USAF (Aero Intel)
+]);
+const MIL_CALLSIGN_STARTS = [
+    'DUKE', 'ASCOT', 'REACH', 'EVAC', 'NAVY', 'CASA',
+    'CANFO', 'JAKE', 'TOPCAT', 'VIPER', 'RAFR',
+    'TALLY', 'CHAOS', 'DEMON', 'MOOSE',
+];
+const MIL_TYPES = new Set([
+    'C17','C130','C30J','C30H','A400','A40M',       // transports
+    'KC10','KC46','KC35','A332','A333',              // tankers (military variants)
+    'EUFI','F16','F15E','F15','F18','FA18',          // fighters
+    'F35','F22','HAWK','TUCA','GR4','TORN',
+    'P8','P8A','P3','E3CF','E3TF','E6B','E8',       // surveillance / AWACS
+    'U2','GLHK','RQ4','MQ9','MQ1',                  // high-alt / UAV
+    'RC35','GLEX','BE20','C12',                      // ISR
+    'V22','CH47','CH53','UH60','AH64','MRH9',       // military rotary
+    'A109','LYNX','WILD','MRLX','NH90',
+    'C5','C5M','C2','C27J','CN35',                   // heavy transports
+]);
+const RARE_TYPES = new Set([
+    'A124','A225','BLCF','BLNG','CONC',              // AN-124, AN-225, Beluga XL/ST, Concorde
+    'B52','B1','B2','A10',                           // bombers (rare over UK)
+]);
+const HELI_TYPES = new Set([
+    'H125','H130','H135','H145','H155','H160','H175','H215','H225',
+    'EC20','EC25','EC30','EC35','EC45','EC55','EC75',
+    'S61','S70','S76','S92',
+    'AW09','AW13','AW16','AW18','AW10','AW19',
+    'B06','B07','B22','B47','B05','B06T',
+    'R22','R44','R66',
+    'BK17','B412','B429','B505','B407','B206','B212',
+    'AS50','AS55','AS65','AS32','AS33','AS35',
+    'MD52','MD60','MD90','EXPL','LAMA','HUCO',
+    'A109','A119','A139','A149','A169','A189',
+    'K32','KMAX','R900','CABR','DJIN',
+    'G2CA','REVO','GUIM','EXEC',
+]);
+
+function classifyFlight(f, route) {
+    const cs   = (f.callsign || '').toUpperCase();
+    const type = (f.type || '').toUpperCase();
+
+    // ── RARE: military callsign prefix ──────────────────────────────────────
+    const prefix3 = cs.replace(/[0-9]/g, '').substring(0, 3);
+    if (MIL_PREFIXES.has(prefix3)) return { tag: 'MILITARY', tier: 'rare' };
+
+    // ── RARE: military callsign start words ─────────────────────────────────
+    for (const s of MIL_CALLSIGN_STARTS) {
+        if (cs.startsWith(s)) return { tag: 'MILITARY', tier: 'rare' };
+    }
+
+    // ── RARE: military aircraft types ───────────────────────────────────────
+    if (MIL_TYPES.has(type)) return { tag: 'MILITARY', tier: 'rare' };
+
+    // ── RARE: genuinely rare civilian types ─────────────────────────────────
+    if (RARE_TYPES.has(type)) return { tag: 'RARE TYPE', tier: 'rare' };
+
+    // ── RARE: extreme altitude ──────────────────────────────────────────────
+    if (f.altFt > 50000) return { tag: 'HIGH ALT', tier: 'rare' };
+
+    // ── UNCOMMON: helicopters ───────────────────────────────────────────────
+    if (HELI_TYPES.has(type)) return { tag: 'HELICOPTER', tier: 'uncommon' };
+
+    // ── UNCOMMON: first-time airline sighting ───────────────────────────────
+    if (route?.airlineName && typeof flightLog !== 'undefined' && flightLog.length > 0) {
+        const seen = flightLog.some(e => e.airline === route.airlineName || e.airline === route.airlineIata);
+        if (!seen) return { tag: 'FIRST SIGHTING', tier: 'uncommon' };
+    }
+
+    return null;
+}
+
 // ─── Unit helpers ─────────────────────────────────────────────────────────────
 const mToFt    = m  => Math.round(m * 3.28084);
 const mpsToMph   = v => Math.round(v * 2.23694);
@@ -970,6 +1059,22 @@ function renderFlight(f, idx, total, animate = false) {
     document.getElementById('fl-type').textContent    = ac?.type ? `· ${ac.type}` : '';
     document.getElementById('fl-country').textContent = (route?.airlineName && f.country) ? f.country : '';
     document.getElementById('fl-page').textContent    = total > 1 ? `${idx+1} / ${total}` : '';
+
+    // ── Unusual traffic tag ─────────────────────────────────────────────────
+    const tagEl     = document.getElementById('fl-tag');
+    const airlineEl = document.getElementById('fl-airline');
+    if (tagEl && airlineEl) {
+        airlineEl.classList.remove('tier-rare', 'tier-uncommon');
+        const cls = classifyFlight(f, route);
+        if (cls) {
+            tagEl.textContent = cls.tag;
+            tagEl.className   = `tag-${cls.tier}`;
+            airlineEl.classList.add(`tier-${cls.tier}`);
+        } else {
+            tagEl.textContent = '';
+            tagEl.className   = '';
+        }
+    }
 
     // Route airports (split-flap cells)
     const origCode = route === undefined ? '···' : (route?.origin || '???');
