@@ -11,7 +11,7 @@
 //   4. Never forwards 429 to client — always returns data or empty array
 
 const ADSB_BASE = 'https://opendata.adsb.fi/api/v2';
-const CACHE_TTL = 20; // seconds — short enough to catch jets crossing a 5mi zone (~70s)
+const CACHE_TTL = 10; // seconds — frequent updates while tracking overhead flights
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',

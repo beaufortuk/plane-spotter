@@ -1,6 +1,6 @@
 // ─── Configuration ────────────────────────────────────────────────────────────
 let   UNITS              = localStorage.getItem('pt-units') || 'imperial';
-const FLIGHT_REFRESH_MS  = 30_000;  // 30s — fast enough to catch jets in 5mi zone
+const FLIGHT_REFRESH_MS  = 15_000;  // 15s — frequent updates while tracking
 const FLIGHT_IDLE_MS     = 15_000;  // 15s — rapid scan when sky is empty
 const FLIGHT_BACKOFF_MS  = 30_000;  // back off on error (Worker absorbs 429s)
 const WEATHER_REFRESH_MS = 600_000;
@@ -443,6 +443,8 @@ async function fetchFlights() {
                 spd:      Math.round(a.gs || 0),
                 dir:      toCardinal(bearing(userLat, userLon, a.lat, a.lon)),
                 vrateFpm: Math.round(a.baro_rate || 0),
+                navAlt:   typeof a.nav_altitude_mcp === 'number' ? a.nav_altitude_mcp : null,
+                navModes: Array.isArray(a.nav_modes) ? a.nav_modes : [],
                 distMi,
                 type:     a.t || '',
                 reg:      a.r || '',
@@ -617,20 +619,62 @@ function renderArc(f, route) {
 
     // ── Progress ─────────────────────────────────────────────────────────────
     const hasData = !!(route?.originLat && route?.destLat);
-    let pct = 50;
+    let pct = 50, totalMi = 0;
     if (hasData) {
-        const total = haversine(route.originLat, route.originLon, route.destLat, route.destLon);
-        if (total > 10) {
+        totalMi = haversine(route.originLat, route.originLon, route.destLat, route.destLon);
+        if (totalMi > 10) {
             const flown = haversine(route.originLat, route.originLon, f.lat, f.lon);
-            pct = Math.max(2, Math.min(98, (flown / total) * 100));
+            pct = Math.max(2, Math.min(98, (flown / totalMi) * 100));
         }
+    }
+
+    // ── Telemetry-based phase detection ─────────────────────────────────────
+    // Real-world climb/descent distances are roughly constant regardless of
+    // total route length (~150mi climb to cruise, ~100mi descent to landing).
+    // Use these + actual vertical rate to determine the flight's true phase,
+    // then remap distance % onto the visual arc segments.
+    const CLIMB_DIST_MI   = 150;
+    const DESCENT_DIST_MI = 100;
+    const dp = pct / 100; // distance progress 0–1
+
+    // Real-world phase boundaries (as fraction of total route)
+    const realClimbEnd     = totalMi > 50 ? Math.min(0.35, CLIMB_DIST_MI / totalMi) : 0.18;
+    const realDescentStart = totalMi > 50 ? Math.max(0.65, 1 - DESCENT_DIST_MI / totalMi) : 0.78;
+
+    // Detect actual phase from aircraft telemetry
+    // Thresholds align with the climb-rate display (±200 fpm)
+    let phase;
+    if (f.vrateFpm > 200)                                       phase = 'climb';
+    else if (f.vrateFpm < -200)                                 phase = 'descent';
+    else if (f.navModes && f.navModes.includes('approach'))     phase = 'descent';
+    else if (f.navAlt != null && f.altFt > 15000
+             && f.navAlt < f.altFt - 3000
+             && f.vrateFpm < -100)                              phase = 'descent';
+    else if (f.altFt > 10000)                                   phase = 'cruise';
+    else if (dp < 0.5)                                          phase = 'climb';
+    else                                                        phase = 'descent';
+
+    // Remap distance % → visual arc position (tn 0–1)
+    // Maps real-world phase boundaries to the visual CLIMB_F / CRUISE_F / DESCENT_F
+    let tn;
+    if (phase === 'climb') {
+        const t = Math.min(dp / realClimbEnd, 1);
+        tn = t * CLIMB_F;
+    } else if (phase === 'descent') {
+        const t = realDescentStart < 1
+            ? Math.max(0, Math.min(1, (dp - realDescentStart) / (1 - realDescentStart)))
+            : 1;
+        tn = CLIMB_F + CRUISE_F + t * DESCENT_F;
+    } else {
+        const span = realDescentStart - realClimbEnd;
+        const t = span > 0 ? Math.max(0, Math.min(1, (dp - realClimbEnd) / span)) : 0.5;
+        tn = CLIMB_F + t * CRUISE_F;
     }
 
     // ── Plane position & angle ────────────────────────────────────────────────
     let px, py, angle;
-    const tn = pct / 100;
     if (tn <= CLIMB_F) {
-        const t = tn / CLIMB_F;
+        const t = CLIMB_F > 0 ? tn / CLIMB_F : 0;
         px    = cubicPt(t, xOrig, ccp1x, ccp2x, xTOC);
         py    = cubicPt(t, yGnd,  ccp1y, ccp2y, yCrz);
         angle = Math.atan2(cubicDeriv(t, yGnd, ccp1y, ccp2y, yCrz),
@@ -717,58 +761,82 @@ function flapText(str, lg = false) {
 // ─── Render: animated split-flap cycling ─────────────────────────────────────
 const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
+// Solari split-flap animation — mechanical drum simulation
+// Real Solari boards have a drum with characters in fixed order. All drums
+// start spinning simultaneously, each cycling sequentially through the
+// character set. A drum stops when it reaches its target character, so
+// positions needing fewer flips settle first (natural stagger).
+const FLAP_ORDER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·?';
+const FLAP_TICK  = 240;  // ms per flip — real Solari boards ~200ms (5 flaps/sec)
+const FLAP_MIN   = 6;    // minimum flips so every position visibly animates
+
 function flapAnimate(element, targetText, lg = false) {
     const cls = lg ? 'flap flap-lg' : 'flap';
     const chars = [...targetText];
     const len = chars.length;
-    const settled = new Array(len).fill(false);
-    const TICK = 180;          // ms between flips — real Solari boards ~200ms (5 flaps/sec)
-    const STAGGER = 200;       // ms delay between each position settling (left to right)
-    const START_DELAY = 300;   // ms before first char settles
 
-    // Build initial random flap spans
-    const spans = chars.map((ch, i) => {
-        if (ch === ' ') { settled[i] = true; return null; }
-        const span = document.createElement('span');
-        span.className = cls;
-        span.textContent = FLAP_CHARS[Math.floor(Math.random() * FLAP_CHARS.length)];
-        return span;
-    });
+    // Per-position state: current index in FLAP_ORDER, target index, remaining flips
+    const spans    = [];
+    const curIdx   = [];
+    const tgtIdx   = [];
+    const remain   = [];
+    const settled  = [];
 
     element.innerHTML = '';
-    spans.forEach((span, i) => {
-        if (!span) {
+
+    for (let i = 0; i < len; i++) {
+        const ch = chars[i];
+        if (ch === ' ') {
             const spacer = document.createElement('span');
             spacer.style.cssText = 'width:6px;display:inline-block';
             element.appendChild(spacer);
-        } else {
-            element.appendChild(span);
+            spans.push(null);
+            curIdx.push(0); tgtIdx.push(0); remain.push(0); settled.push(true);
+            continue;
         }
-    });
 
-    // Cycle random chars on unsettled positions
+        const span = document.createElement('span');
+        span.className = cls;
+
+        const ti = FLAP_ORDER.indexOf(ch.toUpperCase());
+        const target = ti >= 0 ? ti : 0;
+
+        // Each position does at least FLAP_MIN flips, plus 0-14 extra for variety
+        const totalFlips = FLAP_MIN + Math.floor(Math.random() * 15);
+        const start = ((target - totalFlips) % FLAP_ORDER.length + FLAP_ORDER.length) % FLAP_ORDER.length;
+
+        span.textContent = FLAP_ORDER[start];
+        element.appendChild(span);
+
+        spans.push(span);
+        curIdx.push(start);
+        tgtIdx.push(target);
+        remain.push(totalFlips);
+        settled.push(false);
+    }
+
+    // All drums flip simultaneously; each stops when it hits its target
     const ticker = setInterval(() => {
+        let allDone = true;
         for (let i = 0; i < len; i++) {
-            if (!settled[i] && spans[i]) {
-                spans[i].textContent = FLAP_CHARS[Math.floor(Math.random() * FLAP_CHARS.length)];
+            if (settled[i] || !spans[i]) continue;
+            curIdx[i] = (curIdx[i] + 1) % FLAP_ORDER.length;
+            remain[i]--;
+            spans[i].textContent = FLAP_ORDER[curIdx[i]];
+
+            if (remain[i] <= 0) {
+                settled[i] = true;
+                spans[i].textContent = chars[i]; // snap to exact target
+                spans[i].classList.add('settling');
+                spans[i].addEventListener('animationend', () => {
+                    spans[i].classList.remove('settling');
+                }, { once: true });
+            } else {
+                allDone = false;
             }
         }
-    }, TICK);
-
-    // Settle each char left-to-right
-    chars.forEach((ch, i) => {
-        if (settled[i]) return;
-        setTimeout(() => {
-            settled[i] = true;
-            spans[i].textContent = ch;
-            spans[i].classList.add('settling');
-            spans[i].addEventListener('animationend', () => {
-                spans[i].classList.remove('settling');
-            }, { once: true });
-            // All done?
-            if (settled.every(Boolean)) clearInterval(ticker);
-        }, START_DELAY + i * STAGGER);
-    });
+        if (allDone) clearInterval(ticker);
+    }, FLAP_TICK);
 }
 
 // ─── Render: callsign with flap cells ────────────────────────────────────────
