@@ -6,3 +6,9 @@ worker/.wrangler/
 macos-widget/PlaneTracker.xcodeproj/xcuserdata/
 macos-widget/PlaneTracker.xcodeproj/project.xcworkspace/xcuserdata/
 DerivedData/
+
+# Android
+android-widget/.gradle/
+android-widget/app/build/
+android-widget/build/
+android-widget/local.properties
