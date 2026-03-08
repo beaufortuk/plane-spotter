@@ -455,6 +455,97 @@ async function fetchFlights() {
         .slice(0, 5);
 }
 
+// ─── ICAO airport code → IATA code + city name ──────────────────────────────
+// Covers major airports where adsbdb/hexdb return ICAO codes without IATA/city.
+// Format: 'IATA:City Name'
+const ICAO_AIRPORTS = {
+    // UK & Ireland
+    EGLL:'LHR:London',EGKK:'LGW:London Gatwick',EGSS:'STN:London Stansted',
+    EGLC:'LCY:London City',EGCC:'MAN:Manchester',EGBB:'BHX:Birmingham',
+    EGGD:'BRS:Bristol',EGNX:'EMA:East Midlands',EGPH:'EDI:Edinburgh',
+    EGGW:'LTN:Luton',EGPF:'GLA:Glasgow',EGAA:'BFS:Belfast',EGAC:'BHD:Belfast City',
+    EGNM:'LBA:Leeds Bradford',EGGP:'LPL:Liverpool',EGHI:'SOU:Southampton',
+    EGNT:'NCL:Newcastle',EGPD:'ABZ:Aberdeen',EIDW:'DUB:Dublin',EICK:'ORK:Cork',
+    EINN:'SNN:Shannon',
+    // Europe
+    LFPG:'CDG:Paris',LFPO:'ORY:Paris Orly',EHAM:'AMS:Amsterdam',
+    EDDF:'FRA:Frankfurt',EDDM:'MUC:Munich',EDDB:'BER:Berlin',
+    LEMD:'MAD:Madrid',LEBL:'BCN:Barcelona',LPPT:'LIS:Lisbon',
+    LIRF:'FCO:Rome',LIMC:'MXP:Milan Malpensa',LSZH:'ZRH:Zurich',
+    LOWW:'VIE:Vienna',EBBR:'BRU:Brussels',EKCH:'CPH:Copenhagen',
+    ENGM:'OSL:Oslo',ESSA:'ARN:Stockholm',EFHK:'HEL:Helsinki',
+    EPWA:'WAW:Warsaw',LKPR:'PRG:Prague',LHBP:'BUD:Budapest',
+    LGAV:'ATH:Athens',LTFM:'IST:Istanbul',LTAI:'AYT:Antalya',
+    LROP:'OTP:Bucharest',LDZA:'ZAG:Zagreb',LYBE:'BEG:Belgrade',
+    LEAL:'ALC:Alicante',LEMG:'AGP:Malaga',LPFR:'FAO:Faro',
+    LGIR:'HER:Heraklion',LGKO:'KGS:Kos',LGRP:'RHO:Rhodes',
+    LMML:'MLA:Malta',BIKF:'KEF:Reykjavik',LICJ:'PMO:Palermo',
+    LFMN:'NCE:Nice',LFLL:'LYS:Lyon',LSGG:'GVA:Geneva',
+    EDDL:'DUS:Dusseldorf',EDDH:'HAM:Hamburg',EDDK:'CGN:Cologne',
+    EDDS:'STR:Stuttgart',EDDN:'NUE:Nuremberg',EDDP:'LEJ:Leipzig',
+    EHRD:'RTM:Rotterdam',LIPE:'BLQ:Bologna',LIPZ:'VCE:Venice',
+    LIRA:'CIA:Rome Ciampino',GCFV:'FUE:Fuerteventura',GCTS:'TFS:Tenerife South',
+    GCLP:'LPA:Gran Canaria',GCXO:'TFN:Tenerife North',GCRR:'ACE:Lanzarote',
+    LEPA:'PMI:Palma de Mallorca',LEBB:'BIO:Bilbao',
+    EDDT:'TXL:Berlin Tegel',EDDW:'BRE:Bremen',
+    // Middle East
+    OMDB:'DXB:Dubai',OMDW:'DWC:Dubai World Central',OMAA:'AUH:Abu Dhabi',
+    OBBI:'BAH:Bahrain',OTHH:'DOH:Doha',OEJN:'JED:Jeddah',OERK:'RUH:Riyadh',
+    OOMS:'MCT:Muscat',OKBK:'KWI:Kuwait',OLBA:'BEY:Beirut',
+    LLBG:'TLV:Tel Aviv',OJAM:'AMM:Amman',
+    // North America
+    KJFK:'JFK:New York',KLAX:'LAX:Los Angeles',KORD:'ORD:Chicago',
+    KATL:'ATL:Atlanta',KDFW:'DFW:Dallas',KDEN:'DEN:Denver',
+    KSFO:'SFO:San Francisco',KSEA:'SEA:Seattle',KMIA:'MIA:Miami',
+    KEWR:'EWR:Newark',KBOS:'BOS:Boston',KIAD:'IAD:Washington Dulles',
+    KDCA:'DCA:Washington Reagan',KPHL:'PHL:Philadelphia',KMSP:'MSP:Minneapolis',
+    KDTW:'DTW:Detroit',KFLL:'FLL:Fort Lauderdale',KMCO:'MCO:Orlando',
+    KTPA:'TPA:Tampa',KLAS:'LAS:Las Vegas',KPHX:'PHX:Phoenix',
+    KSLC:'SLC:Salt Lake City',KSAN:'SAN:San Diego',KPDX:'PDX:Portland',
+    KCLT:'CLT:Charlotte',KBWI:'BWI:Baltimore',KRDU:'RDU:Raleigh',
+    KSTL:'STL:St Louis',KMKE:'MKE:Milwaukee',KPIT:'PIT:Pittsburgh',
+    KCLE:'CLE:Cleveland',KAUS:'AUS:Austin',KSAT:'SAT:San Antonio',
+    KHOU:'HOU:Houston Hobby',KIAH:'IAH:Houston',KBNA:'BNA:Nashville',
+    CYYZ:'YYZ:Toronto',CYUL:'YUL:Montreal',CYVR:'YVR:Vancouver',
+    CYOW:'YOW:Ottawa',CYYC:'YYC:Calgary',CYEG:'YEG:Edmonton',
+    CYHA:'YHZ:Halifax',MMMX:'MEX:Mexico City',MMUN:'CUN:Cancun',
+    // Asia-Pacific
+    VHHH:'HKG:Hong Kong',WSSS:'SIN:Singapore',VTBS:'BKK:Bangkok',
+    RPLL:'MNL:Manila',WIII:'CGK:Jakarta',WMKK:'KUL:Kuala Lumpur',
+    RJTT:'HND:Tokyo Haneda',RJAA:'NRT:Tokyo Narita',RKSI:'ICN:Seoul Incheon',
+    ZBAA:'PEK:Beijing',ZSPD:'PVG:Shanghai',ZGGG:'CAN:Guangzhou',
+    VABB:'BOM:Mumbai',VIDP:'DEL:Delhi',VOBL:'BLR:Bangalore',
+    YSSY:'SYD:Sydney',YMML:'MEL:Melbourne',YBBN:'BNE:Brisbane',
+    NZAA:'AKL:Auckland',NZCH:'CHC:Christchurch',
+    // Africa
+    FACT:'CPT:Cape Town',FAOR:'JNB:Johannesburg',HECA:'CAI:Cairo',
+    GMMN:'CMN:Casablanca',DNMM:'LOS:Lagos',HKJK:'NBO:Nairobi',
+    HAAB:'ADD:Addis Ababa',DTTA:'TUN:Tunis',DAAG:'ALG:Algiers',
+    // South America
+    SBGR:'GRU:Sao Paulo',SCEL:'SCL:Santiago',SAEZ:'EZE:Buenos Aires',
+    SKBO:'BOG:Bogota',SPJC:'LIM:Lima',SEQM:'UIO:Quito',
+    // Frankfurt Hahn (from the screenshot)
+    EDFH:'HHN:Frankfurt Hahn',
+    // Greenville-Spartanburg
+    KGSP:'GSP:Greer',
+};
+
+function normalizeRoute(route) {
+    if (!route) return route;
+    for (const key of ['origin', 'dest']) {
+        const code = route[key];
+        if (!code || code.length !== 4) continue; // only process 4-char ICAO codes
+        const entry = ICAO_AIRPORTS[code];
+        if (entry) {
+            const [iata, city] = entry.split(':');
+            route[key] = iata;
+            const nameKey = key + 'Name';
+            if (!route[nameKey]) route[nameKey] = city;
+        }
+    }
+    return route;
+}
+
 // ─── Fetch route + airline (adsbdb.com → hexdb.io fallback) ──────────────────
 async function fetchRoute(callsign) {
     if (routeCache.has(callsign)) return routeCache.get(callsign);
@@ -479,6 +570,7 @@ async function fetchRoute(callsign) {
                     airlineName: fr.airline?.name          || null,
                     airlineIata: fr.airline?.iata          || null,
                 };
+                normalizeRoute(route);
                 routeCache.set(callsign, route);
                 saveRouteCache();
                 return route;
@@ -511,7 +603,8 @@ async function fetchRoute(callsign) {
                         airlineName: airlineFb?.airlineName || null,
                         airlineIata: airlineFb?.airlineIata || null,
                     };
-                    console.log(`[ROUTE] hexdb.io resolved ${callsign} -> ${orig}-${dest}`);
+                    normalizeRoute(route);
+                    console.log(`[ROUTE] hexdb.io resolved ${callsign} -> ${route.origin}-${route.dest}`);
                     routeCache.set(callsign, route);
                     saveRouteCache();
                     return route;
