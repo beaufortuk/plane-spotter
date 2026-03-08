@@ -6,3 +6,4 @@ worker/.wrangler/
 macos-widget/PlaneTracker.xcodeproj/xcuserdata/
 macos-widget/PlaneTracker.xcodeproj/project.xcworkspace/xcuserdata/
 DerivedData/
+macos-widget/build/
