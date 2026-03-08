@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple airplane icon in gold -->
+    <path
+        android:fillColor="#D4A847"
+        android:pathData="M54,30 L60,48 L78,48 L64,58 L68,76 L54,66 L40,76 L44,58 L30,48 L48,48 Z" />
+</vector>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="panel_bg">#FF141416</color>
+    <color name="flap_bg">#FF1E1E21</color>
+    <color name="flap_border">#FF2E2E33</color>
+    <color name="gold_accent">#FFD4A847</color>
+    <color name="text_primary">#FFF2EBD9</color>
+    <color name="text_dim">#FF8C877A</color>
+    <color name="status_ok">#FF4DBF66</color>
+    <color name="status_err">#FFD94D4D</color>
+    <color name="climb_green">#FF4DCC73</color>
+    <color name="descent_red">#FFE6594D</color>
+    <color name="level_blue">#FF66A6E6</color>
+</resources>
