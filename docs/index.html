@@ -1370,17 +1370,19 @@ function renderWeather(data) {
 function showClock()  {
     document.getElementById('clock-mode').classList.remove('hidden');
     document.getElementById('flight-mode').classList.add('hidden');
+    document.getElementById('hd-right').style.visibility = 'hidden';
 }
 function showFlight() {
     document.getElementById('clock-mode').classList.add('hidden');
     document.getElementById('flight-mode').classList.remove('hidden');
+    document.getElementById('hd-right').style.visibility = 'visible';
 }
 
 function updateDisplay() {
     clearTimeout(cycleTimer);
     if (flights.length === 0) {
         showClock();
-        document.getElementById('ft-count').textContent = 'No flights overhead';
+        document.getElementById('ft-count').textContent = '';
         return;
     }
     showFlight();
