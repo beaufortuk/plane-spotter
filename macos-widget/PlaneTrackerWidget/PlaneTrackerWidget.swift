@@ -15,23 +15,9 @@ struct PlaneTrackerProvider: AppIntentTimelineProvider {
     func timeline(for configuration: PlaneTrackerIntent, in context: Context) async -> Timeline<PlaneTrackerEntry> {
         let entry = await fetchEntry(units: configuration.units)
 
-        // Schedule entries at 5-minute intervals, request reload after
-        var entries: [PlaneTrackerEntry] = [entry]
-        for i in 1...2 {
-            let futureDate = Calendar.current.date(byAdding: .minute, value: i * 5, to: entry.date) ?? entry.date
-            let futureEntry = PlaneTrackerEntry(
-                date: futureDate,
-                flights: entry.flights,
-                routes: entry.routes,
-                weather: entry.weather,
-                errorMessage: entry.errorMessage,
-                units: entry.units
-            )
-            entries.append(futureEntry)
-        }
-
-        let reloadDate = Calendar.current.date(byAdding: .minute, value: 10, to: entry.date) ?? entry.date
-        return Timeline(entries: entries, policy: .after(reloadDate))
+        // Single entry with fresh data; reload ASAP so widget stays current.
+        // WidgetKit throttles reloads to ~5 min minimum regardless of policy.
+        return Timeline(entries: [entry], policy: .atEnd)
     }
 
     private func fetchEntry(units: TemperatureUnit) async -> PlaneTrackerEntry {
