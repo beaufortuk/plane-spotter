@@ -6,7 +6,7 @@ Built as a single-file web app (`docs/index.html`) with no dependencies, no buil
 
 ## What it does
 
-- Detects flights overhead using the [OpenSky Network](https://opensky-network.org/) API
+- Detects flights overhead using the [adsb.fi](https://adsb.fi/) API
 - Resolves routes and airline info via [adsbdb](https://www.adsbdb.com/)
 - Displays departure/arrival airports with a Solari split-flap animation
 - Shows altitude, ground speed, distance, and climb rate
@@ -20,7 +20,7 @@ Built as a single-file web app (`docs/index.html`) with no dependencies, no buil
 |-----------|------|
 | `docs/` | The web app — a single `index.html` served via GitHub Pages |
 | `macos-widget/` | Native macOS WidgetKit widget (Swift) |
-| `worker/` | Cloudflare Worker proxy for OpenSky API |
+| `worker/` | Cloudflare Worker proxy for the adsb.fi API |
 
 ## Running it
 

@@ -70,7 +70,7 @@ export default {
         try {
             const upstream = `${ADSB_BASE}${normalized}`;
             const resp = await fetch(upstream, {
-                headers: { 'User-Agent': 'plane-tracker-rgb/1.0' },
+                headers: { 'User-Agent': 'plane-spotter/1.0' },
             });
 
             if (resp.status === 200) {
